@@ -1,0 +1,19 @@
+{
+  "name": "capacitaflow-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Clean White Aero Training Management System",
+  "workspaces": [
+    "front",
+    "back"
+  ],
+  "scripts": {
+    "dev:back": "npm run dev --workspace=back",
+    "dev:front": "npm run dev --workspace=front",
+    "dev": "concurrently \"npm run dev:back\" \"npm run dev:front\"",
+    "install:all": "npm install && npm install --workspace=back && npm install --workspace=front"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

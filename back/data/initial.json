@@ -1,0 +1,62 @@
+{
+  "categories": [
+    { "id": "seg", "label": "⚡ Seguridad", "courses": [
+      { "id": "c1", "name": "Uso de EPP", "maxPerSlot": 15 },
+      { "id": "c2", "name": "Trabajo en Altura", "maxPerSlot": 10 },
+      { "id": "c3", "name": "Espacios Confinados", "maxPerSlot": 8 },
+      { "id": "c4", "name": "Bloqueo y Etiquetado (LOTO)", "maxPerSlot": 12 }
+    ]},
+    { "id": "cal", "label": "✓ Calidad", "courses": [
+      { "id": "c5", "name": "ISO 9001 Básico", "maxPerSlot": 20 },
+      { "id": "c6", "name": "Control de Documentos", "maxPerSlot": 20 },
+      { "id": "c7", "name": "Auditorías Internas", "maxPerSlot": 15 }
+    ]},
+    { "id": "ope", "label": "⚙ Operaciones", "courses": [
+      { "id": "c8", "name": "Manejo Manual de Cargas", "maxPerSlot": 12 },
+      { "id": "c9", "name": "Operación de Maquinaria Pesada", "maxPerSlot": 6 }
+    ]},
+    { "id": "med", "label": "◈ Medioambiente", "courses": [
+      { "id": "c10", "name": "Gestión de Residuos", "maxPerSlot": 18 },
+      { "id": "c11", "name": "Manejo de Derrames Químicos", "maxPerSlot": 10 }
+    ]},
+    { "id": "eme", "label": "✦ Emergencias", "courses": [
+      { "id": "c12", "name": "Primeros Auxilios", "maxPerSlot": 16 },
+      { "id": "c13", "name": "Uso de Extintor", "maxPerSlot": 20 },
+      { "id": "c14", "name": "Procedimiento de Evacuación", "maxPerSlot": 30 }
+    ]}
+  ],
+  "workers": [
+    { "id":"w1",  "name":"Carlos Muñoz Vega",       "rut":"12.345.678-9", "hireDate":"2021-03-15", "contractor":"Constructora Sur S.A." },
+    { "id":"w2",  "name":"Ana Rodríguez Silva",      "rut":"15.678.901-2", "hireDate":"2022-07-01", "contractor":"Servicios Norte Ltda." },
+    { "id":"w3",  "name":"Pedro Castillo Ríos",      "rut":"10.234.567-8", "hireDate":"2020-01-20", "contractor":"Mantención Andina SpA" },
+    { "id":"w4",  "name":"Valentina Parra Gómez",    "rut":"17.890.123-4", "hireDate":"2023-02-14", "contractor":"Constructora Sur S.A." },
+    { "id":"w5",  "name":"Felipe Herrera Torres",    "rut":"13.456.789-0", "hireDate":"2021-09-05", "contractor":"TechOps Chile Ltda." },
+    { "id":"w6",  "name":"Camila Lagos Sepúlveda",   "rut":"16.789.012-3", "hireDate":"2022-11-30", "contractor":"Servicios Norte Ltda." },
+    { "id":"w7",  "name":"Andrés Morales Fuentes",   "rut":"11.234.567-K", "hireDate":"2019-06-17", "contractor":"Mantención Andina SpA" },
+    { "id":"w8",  "name":"Daniela Soto Reyes",       "rut":"14.567.890-1", "hireDate":"2023-08-22", "contractor":"TechOps Chile Ltda." },
+    { "id":"w9",  "name":"Rodrigo Díaz Sandoval",    "rut":"18.901.234-5", "hireDate":"2024-01-10", "contractor":"Constructora Sur S.A." },
+    { "id":"w10", "name":"Javiera Flores Medina",    "rut":"12.890.345-6", "hireDate":"2022-04-03", "contractor":"Servicios Norte Ltda." },
+    { "id":"w11", "name":"Ignacio Vargas Acosta",    "rut":"19.234.567-7", "hireDate":"2023-11-15", "contractor":"TechOps Chile Ltda." },
+    { "id":"w12", "name":"Sofía Contreras Bravo",    "rut":"13.678.901-8", "hireDate":"2020-08-28", "contractor":"Mantención Andina SpA" }
+  ],
+  "schedules": {
+    "c1": [
+      { "id":"s1", "date":"2026-04-05", "start":"09:00", "end":"11:00", "max":15, "enrolled":["w1","w3"] },
+      { "id":"s2", "date":"2026-04-08", "start":"14:00", "end":"16:00", "max":15, "enrolled":[] },
+      { "id":"s3", "date":"2026-04-15", "start":"09:00", "end":"11:00", "max":15, "enrolled":[] }
+    ],
+    "c2": [
+      { "id":"s4", "date":"2026-04-10", "start":"08:00", "end":"12:00", "max":10, "enrolled":["w2"] },
+      { "id":"s5", "date":"2026-04-22", "start":"13:00", "end":"17:00", "max":10, "enrolled":[] }
+    ],
+    "c12": [
+      { "id":"s6", "date":"2026-04-07", "start":"10:00", "end":"13:00", "max":16, "enrolled":["w4","w5","w6"] },
+      { "id":"s7", "date":"2026-04-14", "start":"10:00", "end":"13:00", "max":16, "enrolled":[] }
+    ]
+  },
+  "users": [
+    { "id": "u1", "username": "admin", "password": "123", "role": "SuperAdmin", "name": "Pablo Solís" },
+    { "id": "u2", "username": "contra1", "password": "123", "role": "Contratista", "name": "Contacto Sur", "contractorName": "Constructora Sur S.A." }
+  ],
+  "requests": []
+}

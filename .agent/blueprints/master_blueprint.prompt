@@ -1,0 +1,33 @@
+# CapacitaFlow - Master Blueprint
+
+## Architecture Overview
+- **Backend**: Node.js/Express
+- **Database**: MySQL (Local)
+- **ORM**: Sequelize
+- **Frontend**: React/Vite (not modified in this mission)
+
+## Domain Entities (Aggregates)
+
+### EducationContext
+- **Category**: Grouping of courses (e.g., Seguridad, Calidad). Has many **courses** (alias: `courses`).
+- **Course**: A specific training unit with capacity rules.
+- **ScheduleSlot**: A scheduled event for a course (date, time, max capacity). Includes many **workers** (alias: `workers`).
+- **Enrollment**: Many-to-many relationship between Workers and ScheduleSlots. Includes `evaluation` status (`pending`, `passed`, `failed`).
+- **Request**: Request from a contractor to enroll N workers in a specific slot. Status: `pending`, `approved`, `rejected`. Approved requests trigger automatic enrollment. Admin evaluates individual workers after the slot date has passed.
+
+### ResourceContext
+- **Worker**: Personnel assigned to training events. Includes RUT and contractor details.
+
+### SecurityContext
+- **User**: Auth entities with roles (SuperAdmin, Contratista).
+
+### LogisticsContext
+- **Request**: Pending solicitudes for new slots or registrations.
+
+## Infrastructure
+- **Connection**: Managed via `.env` variables and `database/db.js`.
+- **Environment**: Local MySQL instance `capacitaflow_db`.
+
+## Data Synchronization
+- Initial data migrated from `initial.json` to MySQL.
+- `db.json` is deprecated and should be removed after full verification.
