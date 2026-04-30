@@ -1,4 +1,4 @@
-name: CI/CD Capacitaciones-M - Preprod
+name: CI/CD Capacitaciones-Molycop - Preprod
 
 on:
   push:
