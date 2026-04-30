@@ -3,7 +3,9 @@ import axios from 'axios';
 import { Zap, Lock, User, AlertCircle } from 'lucide-react';
 import { AeroButton, cn } from './ui/AeroUI';
 
-const API_BASE = 'http://localhost:3001/api/v1';
+import config from '../config';
+
+const API_BASE = config.API_BASE;
 
 export default function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState('');

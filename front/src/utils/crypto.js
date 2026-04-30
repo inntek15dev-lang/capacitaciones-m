@@ -10,6 +10,9 @@ import pako from 'pako';
  */
 export const decryptDataString = (cadenatexto) => {
     try {
+        if (!cadenatexto) return null;
+        console.log("[CRYPTO] Intentando desencriptar payload...");
+        
         const keyString = 'MolycopSecureTrainingKey2024###';
         
         // 1. Revert Base64URL to standard Base64
@@ -51,12 +54,19 @@ export const decryptDataString = (cadenatexto) => {
         const decompressed = pako.inflateRaw(decryptedUint8, { to: 'string' });
         
         // 8. Parse JSON
-        return JSON.parse(decompressed);
+        const result = JSON.parse(decompressed);
+        console.log("[CRYPTO] Desencriptación exitosa:", result);
+        return result;
     } catch (err) {
-        console.error("Decryption failed:", err.message);
+        console.error("[CRYPTO] Error crítico en desencriptación:", err.message);
         return null;
     }
 };
+
+// Hacerlo disponible para debugging en consola
+if (typeof window !== 'undefined') {
+    window.decryptSSO = decryptDataString;
+}
 
 /**
  * Helper to convert CryptoJS WordArray to Uint8Array

@@ -28,19 +28,26 @@ export default function App() {
       try {
         // New Secure Decryption (AES-256-CBC + GZInflate)
         const userData = decryptDataString(encodedData);
+        console.log("[SSO] Decrypted User Data:", userData);
         
         if (userData) {
+          // Mapeo robusto desde el JSON encriptado (ASEM/Molycop Standard)
           const mappedUser = {
-            id: userData.usu_usuario,
-            name: userData.usu_usuario,
-            email: userData.usu_correo,
-            role: userData.rol,
+            id: userData.usu_usuario || userData.rut || userData.id,
+            name: userData.usu_nombre || userData.usu_usuario || userData.name,
+            email: userData.usu_correo || userData.email,
+            role: userData.rol || 'Contratista',
             plantas: userData.plantas || [],
             cot_id: userData.cot_id,
             cot_razon_social: userData.cot_razon_social,
-            contractorName: userData.rol === 'Contratista' ? (userData.cot_razon_social || 'Empresa Contratista') : null
+            contractorName: (userData.rol === 'Contratista' || !userData.rol) 
+                ? (userData.cot_razon_social || 'Empresa Contratista') 
+                : null
           };
-          // Also save to localStorage to persist
+          
+          console.log("[SSO] Usuario mapeado correctamente:", mappedUser);
+          
+          // Almacenar en localStorage para persistencia durante la sesión
           localStorage.setItem('capacitaUser', JSON.stringify(mappedUser));
           return mappedUser;
         }
@@ -115,7 +122,9 @@ export default function App() {
   const enrollmentMap = useMemo(() => {
     const map = {};
     currentSchedules.forEach(s => {
-      s.enrolled?.forEach(wid => {
+      s.enrolled?.forEach(enr => {
+        // Now enrolled is an object { id, evaluation }
+        const wid = typeof enr === 'object' ? enr.id : enr;
         map[wid] = s;
       });
     });
