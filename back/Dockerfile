@@ -2,6 +2,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Install netcat for entrypoint healthchecks
+RUN apk add --no-cache netcat-openbsd
+
 # Install dependencies
 COPY package*.json ./
 RUN npm install --production
