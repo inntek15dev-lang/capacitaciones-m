@@ -83,6 +83,12 @@ jobs:
             # Login en el registro de GitHub
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
+            # Limpiar contenedores antiguos para evitar conflictos
+            docker compose down --remove-orphans || true
+            
+            # Borrado forzado por nombre (por si quedaron huérfanos de otras ejecuciones)
+            docker rm -f capacitaciones-m_api capacitaciones-m_db capacitaciones-m_front || true
+
             # Actualizar imágenes y reiniciar contenedores de forma forzada
             docker compose pull
             docker compose up -d --force-recreate
