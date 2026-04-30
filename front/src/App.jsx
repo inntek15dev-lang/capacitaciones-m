@@ -11,27 +11,92 @@ import ContractorView from './components/ContractorView';
 import RequestsView from './components/RequestsView';
 import Dashboard from './components/Dashboard';
 import { AeroButton, cn } from './components/ui/AeroUI';
+import config from './config';
 
-const API_BASE = 'http://localhost:3001/api/v1';
+const API_BASE = config.API_BASE;
 
 export default function App() {
   const [activeModule, setActiveModule] = useState('dashboard'); // 'dashboard' | 'scheduling' | 'charlas' | 'requests'
   const [data, setData] = useState({ categories: [], workers: [], schedules: {}, users: [], requests: [] });
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    // Check URL parameters for automated login (Bypass Login)
+    const params = new URLSearchParams(window.location.search);
+    const encodedData = params.get('data');
+    if (encodedData) {
+      try {
+        // Robust Base64 decoding (supports UTF-8)
+        const decodedString = decodeURIComponent(atob(encodedData).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        
+        const userData = JSON.parse(decodedString);
+        const mappedUser = {
+          id: userData.usu_usuario,
+          name: userData.usu_usuario,
+          email: userData.usu_correo,
+          role: userData.rol,
+          plantas: userData.plantas || [],
+          cot_id: userData.cot_id,
+          cot_razon_social: userData.cot_razon_social,
+          contractorName: userData.rol === 'Contratista' ? (userData.cot_razon_social || 'Empresa Contratista') : null
+        };
+        // Also save to localStorage to persist
+        localStorage.setItem('capacitaUser', JSON.stringify(mappedUser));
+        return mappedUser;
+      } catch (err) {
+        console.error("Error decoding URL data:", err.message);
+        // If robust decoding fails, try simple atob as fallback
+        try {
+          const decodedString = atob(encodedData);
+          const userData = JSON.parse(decodedString);
+          const mappedUser = {
+            id: userData.usu_usuario,
+            name: userData.usu_usuario,
+            email: userData.usu_correo,
+            role: userData.rol,
+            plantas: userData.plantas || [],
+            cot_id: userData.cot_id,
+            cot_razon_social: userData.cot_razon_social,
+            contractorName: userData.rol === 'Contratista' ? (userData.cot_razon_social || 'Empresa Contratista') : null
+          };
+          localStorage.setItem('capacitaUser', JSON.stringify(mappedUser));
+          return mappedUser;
+        } catch (innerErr) {
+          console.error("Critical error parsing JSON from URL:", innerErr);
+        }
+      }
+    }
+    
+    // Fallback to localStorage
+    const savedUser = localStorage.getItem('capacitaUser');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
   const [selectedCourseId, setSelectedCourseId] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [selectedWorkers, setSelectedWorkers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
+  const [bypassActive, setBypassActive] = useState(false);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('capacitaUser');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
     fetchData();
+
+    // Clean URL if we came from a bypass
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('data')) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setBypassActive(true);
+    }
   }, []);
+
+  useEffect(() => {
+    if (bypassActive && user) {
+      showToast(`Acceso automático: Bienvenido ${user.name}`);
+      setBypassActive(false);
+    }
+  }, [bypassActive, user]);
 
   const fetchData = async () => {
     try {
@@ -156,7 +221,7 @@ export default function App() {
             <Zap className="text-white w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-lg font-black text-slate-800 tracking-tight leading-none">CapacitaFlow</h1>
+            <h1 className="text-lg font-black text-slate-800 tracking-tight leading-none uppercase">Capacitaciones Molycop</h1>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Console / Admin</p>
           </div>
         </div>
@@ -237,6 +302,7 @@ export default function App() {
         ) : activeModule === 'charlas' ? (
           <CharlasView 
             categories={data.categories}
+            user={user}
             onRefresh={fetchData}
           />
         ) : (

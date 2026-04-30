@@ -1,4 +1,5 @@
 const express = require('express');
+const axios = require('axios');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
@@ -28,6 +29,49 @@ sequelize.sync({ alter: true }).then(() => {
 });
 
 // --- ROUTES ---
+
+// Health check to verify server version
+app.get('/api/v1/health', (req, res) => res.json({ status: 'ok', version: '2.0-proxy-priority' }));
+
+// Proxy endpoint for external workers (ListadoTrabajadores) - MOVED HERE for priority
+app.get('/api/v1/external/workers', async (req, res) => {
+  const { id_cot, niv_id } = req.query;
+  
+  if (!id_cot || !niv_id) {
+    return res.status(400).json({ error: 'Faltan parámetros id_cot o niv_id' });
+  }
+
+  console.log(`[PROXY] Consultando trabajadores externos para COT: ${id_cot}, NIV: ${niv_id}`);
+
+  try {
+    const response = await axios.post(process.env.EXTERNAL_WORKERS_API_URL, {
+      cot_id: parseInt(id_cot, 10),
+      niv_id: parseInt(niv_id, 10)
+    }, {
+      headers: { 
+        'api-key': process.env.API_KEY_TRABAJADORES,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    // La API puede devolver la lista directamente o en un campo. Manejamos ambos.
+    const rawWorkers = Array.isArray(response.data) ? response.data : (response.data.trabajadores || []);
+    
+    const workers = rawWorkers.map(w => ({
+      ...w,
+      id: w.id || w.rut || `ext-${Math.random().toString(36).substr(2, 9)}`,
+      niv_id: parseInt(niv_id, 10) // Mantenemos niv_id internamente para el front
+    }));
+
+    res.json(workers);
+  } catch (err) {
+    console.error('Error fetching external workers:', err.message);
+    res.status(err.response?.status || 500).json({ 
+      error: 'Error al consultar API externa',
+      details: err.message 
+    });
+  }
+});
 
 // Get all data (for initial load)
 app.get('/api/v1/data', async (req, res) => {
@@ -143,14 +187,16 @@ app.post('/api/v1/enroll', async (req, res) => {
 // Create course
 app.post('/api/v1/courses', async (req, res) => {
   try {
-    const { categoryId, name, maxPerSlot } = req.body;
+    const { categoryId, name, maxPerSlot, niv_id, plantaNombre } = req.body;
     
     const newId = `c${Date.now()}`;
     const newCourse = await Course.create({
       id: newId,
       name,
       maxPerSlot: parseInt(maxPerSlot, 10) || 0,
-      categoryId
+      categoryId,
+      niv_id: niv_id ? parseInt(niv_id, 10) : null,
+      plantaNombre
     });
     
     res.json({ success: true, course: newCourse });
@@ -163,7 +209,7 @@ app.post('/api/v1/courses', async (req, res) => {
 app.put('/api/v1/courses/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { categoryId, name, maxPerSlot } = req.body;
+    const { categoryId, name, maxPerSlot, niv_id, plantaNombre } = req.body;
     
     const course = await Course.findByPk(id);
     if (!course) return res.status(404).json({ error: 'Course not found' });
@@ -171,7 +217,9 @@ app.put('/api/v1/courses/:id', async (req, res) => {
     await course.update({
         name: name !== undefined ? name : course.name,
         maxPerSlot: maxPerSlot !== undefined ? parseInt(maxPerSlot, 10) : course.maxPerSlot,
-        categoryId: categoryId || course.categoryId
+        categoryId: categoryId || course.categoryId,
+        niv_id: niv_id !== undefined ? (niv_id ? parseInt(niv_id, 10) : null) : course.niv_id,
+        plantaNombre: plantaNombre !== undefined ? plantaNombre : course.plantaNombre
     });
     
     res.json({ success: true });
@@ -287,7 +335,6 @@ app.put('/api/v1/requests/:id', async (req, res) => {
   }
 });
 
-// Batch Update Evaluations
 app.post('/api/v1/enrollments/evaluation', async (req, res) => {
   try {
     const { slotId, evaluations } = req.body; // Array of { workerId, status }

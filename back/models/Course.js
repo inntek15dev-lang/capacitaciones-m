@@ -22,6 +22,14 @@ const Course = sequelize.define('Course', {
       key: 'id',
     },
   },
+  niv_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  plantaNombre: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 }, {
   timestamps: true,
 });

@@ -5,7 +5,7 @@ import { AeroButton, cn } from './ui/AeroUI';
 
 const API_BASE = 'http://localhost:3001/api/v1';
 
-export default function CharlasView({ categories, onRefresh }) {
+export default function CharlasView({ categories, user, onRefresh }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   
@@ -13,18 +13,32 @@ export default function CharlasView({ categories, onRefresh }) {
   const [formData, setFormData] = useState({
     name: '',
     categoryId: '',
-    maxPerSlot: 15
+    maxPerSlot: 15,
+    niv_id: '',
+    plantaNombre: ''
   });
 
   const openNewModal = () => {
     setEditingCourse(null);
-    setFormData({ name: '', categoryId: categories[0]?.id || '', maxPerSlot: 15 });
+    setFormData({ 
+      name: '', 
+      categoryId: categories[0]?.id || '', 
+      maxPerSlot: 15,
+      niv_id: user?.plantas?.[0]?.niv_id || '',
+      plantaNombre: user?.plantas?.[0]?.nombre || ''
+    });
     setIsModalOpen(true);
   };
 
   const openEditModal = (course, categoryId) => {
     setEditingCourse(course);
-    setFormData({ name: course.name, categoryId, maxPerSlot: course.maxPerSlot });
+    setFormData({ 
+      name: course.name, 
+      categoryId, 
+      maxPerSlot: course.maxPerSlot,
+      niv_id: course.niv_id || '',
+      plantaNombre: course.plantaNombre || ''
+    });
     setIsModalOpen(true);
   };
 
@@ -90,6 +104,11 @@ export default function CharlasView({ categories, onRefresh }) {
                   <div key={course.id} className="group flex items-center justify-between p-4 bg-white/80 border border-slate-100 rounded-2xl hover:border-blue-200 hover:shadow-md transition-all">
                     <div>
                       <div className="font-bold text-slate-800 text-sm mb-1">{course.name}</div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-widest">
+                          {course.plantaNombre || 'Sin Planta'}
+                        </span>
+                      </div>
                       <div className="text-xs text-slate-500 font-medium">ID: {course.id} • Capacidad: {course.maxPerSlot} personas/sesión</div>
                     </div>
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -173,6 +192,26 @@ export default function CharlasView({ categories, onRefresh }) {
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                 />
               </div>
+
+              {user?.plantas && user.plantas.length > 0 && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Planta Asignada</label>
+                  <select 
+                    required
+                    value={formData.niv_id}
+                    onChange={e => {
+                      const selectedPlant = user.plantas.find(p => p.niv_id.toString() === e.target.value);
+                      setFormData({...formData, niv_id: e.target.value, plantaNombre: selectedPlant?.nombre || ''});
+                    }}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none"
+                  >
+                    <option value="" disabled>Seleccione una planta...</option>
+                    {user.plantas.map(p => (
+                      <option key={p.niv_id} value={p.niv_id}>{p.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="pt-4 flex gap-3">
                 <button 

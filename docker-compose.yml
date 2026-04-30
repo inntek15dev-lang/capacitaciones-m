@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: capacitaciones-m_db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:3376:3306"
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    networks:
+      - capacitaciones-m_default
+
+  api:
+    image: ghcr.io/inntek15dev-lang/capacitaciones-m-api:latest
+    container_name: capacitaciones-m_api
+    restart: always
+    environment:
+      - NODE_ENV=preproduction
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - EXTERNAL_WORKERS_API_URL=${EXTERNAL_WORKERS_API_URL}
+      - API_KEY_TRABAJADORES=${API_KEY_TRABAJADORES}
+      - PORT=4000
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:4050:4000"
+    depends_on:
+      - db
+    networks:
+      - capacitaciones-m_default
+
+  frontend:
+    image: ghcr.io/inntek15dev-lang/capacitaciones-m-front:latest
+    container_name: capacitaciones-m_front
+    restart: always
+    environment:
+      - VITE_API_URL=https://preprod-capacitaciones-m-api.inntek.cl/api/v1
+    ports:
+      - "127.0.0.1:8050:80"
+    depends_on:
+      - api
+    networks:
+      - capacitaciones-m_default
+
+networks:
+  capacitaciones-m_default:
+    driver: bridge

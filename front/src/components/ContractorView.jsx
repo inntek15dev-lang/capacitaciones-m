@@ -3,8 +3,9 @@ import axios from 'axios';
 import { Users, ClipboardList, LogOut, Zap, Search, Plus, CheckCircle, Calendar, Clock, Eye, XCircle, LayoutDashboard, ChevronRight, Download, Monitor, MapPin } from 'lucide-react';
 import { AeroButton, cn } from './ui/AeroUI';
 import Dashboard from './Dashboard';
+import config from '../config';
 
-const API_BASE = 'http://localhost:3001/api/v1';
+const API_BASE = config.API_BASE;
 
 export default function ContractorView({ user, data, onLogout, onRefresh }) {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'workers' | 'requests'
@@ -23,14 +24,50 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
   const [requestsPage, setRequestsPage] = useState(1);
   const [requestsLimit, setRequestsLimit] = useState(5);
   const [showEvaluatedOnly, setShowEvaluatedOnly] = useState(false);
+  const [plantWorkers, setPlantWorkers] = useState([]);
+  const [fetchingWorkers, setFetchingWorkers] = useState(false);
 
-  const myWorkers = useMemo(() => {
-    return data.workers.filter(w => w.contractor === user.contractorName);
-  }, [data.workers, user.contractorName]);
+  // Fetch workers from external API via internal proxy (ListadoTrabajadores)
+  React.useEffect(() => {
+    const fetchWorkers = async () => {
+      if (!user.plantas || user.plantas.length === 0) return;
+      
+      setFetchingWorkers(true);
+      try {
+        const allFetchedWorkers = [];
+        // Iteramos por cada planta del contratista y llamamos a la API interna
+        for (const planta of user.plantas) {
+          const res = await axios.get(`${API_BASE}/external/workers`, {
+            params: { 
+              id_cot: user.cot_id, 
+              niv_id: planta.niv_id,
+              contractorName: user.cot_razon_social // enviado para el mock del servidor
+            }
+          });
+          
+          if (Array.isArray(res.data)) {
+            allFetchedWorkers.push(...res.data);
+          }
+        }
+        setPlantWorkers(allFetchedWorkers);
+      } catch (err) {
+        console.error("Error fetching workers from plants:", err);
+      } finally {
+        setFetchingWorkers(false);
+      }
+    };
+
+    fetchWorkers();
+  }, [user.plantas, user.cot_id, user.cot_razon_social]);
+
+  const myWorkers = plantWorkers;
 
   const courses = useMemo(() => {
-    return data.categories.flatMap(c => c.courses);
-  }, [data.categories]);
+    const allCourses = data.categories.flatMap(c => c.courses);
+    const userPlantIds = user.plantas?.map(p => p.niv_id) || [];
+    // Only show courses that belong to one of the user's plants (by ID)
+    return allCourses.filter(course => userPlantIds.includes(parseInt(course.niv_id, 10)));
+  }, [data.categories, user.plantas]);
 
   const availableSlots = useMemo(() => {
     if (!requestForm.courseId) return [];
@@ -220,8 +257,8 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
             <Zap className="text-white w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-lg font-black text-slate-800 tracking-tight leading-none uppercase">Contratista Portal</h1>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{user.contractorName}</p>
+            <h1 className="text-lg font-black text-slate-800 tracking-tight leading-none uppercase">{user.cot_razon_social || 'Contratista Portal'}</h1>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Portal de Gestión</p>
           </div>
         </div>
 
@@ -285,38 +322,75 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
               </div>
             </div>
 
-            <div className="space-y-4">
-              {paginatedWorkers.map(w => (
-                <div key={w.id} className="bg-white p-6 rounded-[32px] border border-slate-200 flex items-center justify-between shadow-sm hover:shadow-md transition-all group">
-                  <div className="flex items-center gap-6">
-                    <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                      <Users size={28} />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-widest">Activo</span>
-                        <span className="text-xs font-bold text-slate-800">{w.rut}</span>
-                      </div>
-                      <h3 className="text-lg font-black text-slate-800 tracking-tight">{w.name}</h3>
-                    </div>
-                  </div>
+            {fetchingWorkers && (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="w-10 h-10 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin mb-4" />
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sincronizando nómina por planta...</p>
+              </div>
+            )}
 
-                  <div className="flex items-center gap-12">
-                    <div className="text-right">
-                        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Fecha Ingreso</div>
-                        <div className="text-sm font-bold text-slate-600">{w.hireDate}</div>
-                    </div>
-                    <div className="text-right">
-                        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Contratista</div>
-                        <div className="text-sm font-bold text-slate-600">{w.contractor}</div>
-                    </div>
-                    <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-200 group-hover:text-emerald-500 transition-colors">
-                        <Plus size={20} />
-                    </div>
+            {!fetchingWorkers && user.plantas?.map(planta => (
+              <div key={planta.niv_id} className="mb-10">
+                <div className="flex items-center gap-3 mb-4 ml-4">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                    <MapPin size={16} />
                   </div>
+                  <h3 className="text-lg font-black text-slate-700 tracking-tight">Planta: {planta.nombre}</h3>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-full">
+                    ID: {planta.niv_id}
+                  </span>
                 </div>
-              ))}
-            </div>
+                
+                <div className="space-y-4">
+                  {myWorkers.filter(w => w.niv_id === planta.niv_id).length === 0 ? (
+                    <div className="bg-white/40 p-6 rounded-[32px] border border-dashed border-slate-200 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">
+                      No hay trabajadores registrados en esta planta
+                    </div>
+                  ) : (
+                    myWorkers.filter(w => w.niv_id === planta.niv_id).map(w => (
+                      <div key={`${planta.niv_id}-${w.id}`} className="bg-white p-6 rounded-[32px] border border-slate-200 flex items-center justify-between shadow-sm hover:shadow-md transition-all group">
+                        <div className="flex items-center gap-6">
+                          <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                            <Users size={28} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-widest">Activo</span>
+                              <span className="text-xs font-bold text-slate-800">{w.rut}</span>
+                            </div>
+                            <h3 className="text-lg font-black text-slate-800 tracking-tight">{w.nombre_completo}</h3>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{w.cargo}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-12">
+                          <div className="text-right">
+                              <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Fecha Ingreso</div>
+                              <div className="text-sm font-bold text-slate-600">{w.hireDate}</div>
+                          </div>
+                          <div className="text-right">
+                              <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Planta</div>
+                              <div className="text-sm font-bold text-slate-600">{planta.nombre}</div>
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={() => toggleWorkerSelection(w.id)}
+                            className={cn(
+                              "w-10 h-10 rounded-2xl flex items-center justify-center transition-all",
+                              requestForm.workerIds.includes(w.id) 
+                                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20" 
+                                : "bg-slate-50 text-slate-200 group-hover:text-emerald-500"
+                            )}
+                          >
+                            <Plus size={20} className={requestForm.workerIds.includes(w.id) ? "rotate-45" : ""} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
 
             {/* Workers Pagination */}
             {myWorkers.length > 0 && (
@@ -573,8 +647,8 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
                                             <Users size={14} />
                                         </div>
                                         <div>
-                                            <div className="text-[10px] font-black text-slate-800 truncate max-w-[120px]">{worker?.name || 'Desconocido'}</div>
-                                            <div className="text-[8px] font-bold text-slate-400">{worker?.rut}</div>
+                                            <div className="text-[10px] font-black text-slate-800 truncate max-w-[120px]">{worker?.nombre_completo || 'Desconocido'}</div>
+                                            <div className="text-[8px] font-bold text-slate-400">{worker?.rut} • {worker?.cargo}</div>
                                         </div>
                                     </div>
                                     
@@ -696,8 +770,9 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
                                     <Users size={14} />
                                 </div>
                                 <div className="truncate">
-                                    <div className="text-[10px] font-black leading-tight">{w.name}</div>
+                                    <div className="text-[10px] font-black leading-tight">{w.nombre_completo}</div>
                                     <div className="text-[8px] font-bold opacity-60 leading-tight">{w.rut}</div>
+                                    <div className="text-[7px] font-black uppercase tracking-widest opacity-40 leading-none mt-1">{w.cargo}</div>
                                 </div>
                             </button>
                         ))}
