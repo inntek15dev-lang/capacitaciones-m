@@ -54,8 +54,11 @@ app.get('/api/v1/external/workers', async (req, res) => {
       }
     });
 
+    console.log(`[PROXY] Respuesta de API externa recibida. Status: ${response.status}`);
+    
     // La API puede devolver la lista directamente o en un campo. Manejamos ambos.
     const rawWorkers = Array.isArray(response.data) ? response.data : (response.data.trabajadores || []);
+    console.log(`[PROXY] Procesados ${rawWorkers.length} trabajadores de la API externa.`);
     
     const workers = rawWorkers.map(w => ({
       ...w,
@@ -293,7 +296,7 @@ app.post('/api/v1/requests', async (req, res) => {
     
     res.json(newRequest);
   } catch (err) {
-    console.error(err);
+    console.error('API Request failed:', err);
     res.status(500).json({ error: 'Failed to create request' });
   }
 });

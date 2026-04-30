@@ -1,0 +1,23 @@
+{
+    "projectName": "CAPACITACIONES-M",
+    "repoName": "inntek15dev-lang/capacitaciones-m",
+    "branch": "main",
+    "serverPath": "/home/DOCKERS-PREPROD/CAPACITACIONES-M",
+    "db": {
+        "containerName": "capacitaciones-m_db",
+        "name": "capacitaciones-m_db",
+        "portExt": "3350"
+    },
+    "api": {
+        "containerName": "capacitaciones-m_api",
+        "portExt": "4050",
+        "portInt": "4050",
+        "domain": "https://preprod-capacitaciones-m-api.inntek.cl/"
+    },
+    "front": {
+        "containerName": "capacitaciones-m_front",
+        "portExt": "8050",
+        "apiUrl": "https://preprod-capacitaciones-m-api.inntek.cl/api/v1"
+    },
+    "networkName": "capacitaciones-m"
+}

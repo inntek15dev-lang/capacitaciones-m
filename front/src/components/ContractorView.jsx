@@ -40,8 +40,7 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
           const res = await axios.get(`${API_BASE}/external/workers`, {
             params: { 
               id_cot: user.cot_id, 
-              niv_id: planta.niv_id,
-              contractorName: user.cot_razon_social // enviado para el mock del servidor
+              niv_id: planta.niv_id
             }
           });
           

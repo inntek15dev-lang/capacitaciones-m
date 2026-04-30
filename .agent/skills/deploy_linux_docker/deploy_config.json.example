@@ -1,0 +1,23 @@
+{
+  "projectName": "MI-PROYECTO",
+  "repoName": "mi-usuario/mi-repositorio",
+  "branch": "main",
+  "serverPath": "/home/DOCKERS-PREPROD/MI-PROYECTO",
+  "db": {
+    "containerName": "mi_proyecto_db",
+    "name": "mi_db",
+    "portExt": "3376"
+  },
+  "api": {
+    "containerName": "mi_proyecto_api",
+    "portExt": "4000",
+    "portInt": "4000",
+    "domain": "api.mi-dominio.cl"
+  },
+  "front": {
+    "containerName": "mi_proyecto_front",
+    "portExt": "80",
+    "apiUrl": "https://api.mi-dominio.cl/api"
+  },
+  "networkName": "mi_proyecto_network"
+}

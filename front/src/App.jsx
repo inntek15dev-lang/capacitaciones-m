@@ -15,6 +15,8 @@ import config from './config';
 
 const API_BASE = config.API_BASE;
 
+import { decryptDataString } from './utils/crypto';
+
 export default function App() {
   const [activeModule, setActiveModule] = useState('dashboard'); // 'dashboard' | 'scheduling' | 'charlas' | 'requests'
   const [data, setData] = useState({ categories: [], workers: [], schedules: {}, users: [], requests: [] });
@@ -24,31 +26,10 @@ export default function App() {
     const encodedData = params.get('data');
     if (encodedData) {
       try {
-        // Robust Base64 decoding (supports UTF-8)
-        const decodedString = decodeURIComponent(atob(encodedData).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
+        // New Secure Decryption (AES-256-CBC + GZInflate)
+        const userData = decryptDataString(encodedData);
         
-        const userData = JSON.parse(decodedString);
-        const mappedUser = {
-          id: userData.usu_usuario,
-          name: userData.usu_usuario,
-          email: userData.usu_correo,
-          role: userData.rol,
-          plantas: userData.plantas || [],
-          cot_id: userData.cot_id,
-          cot_razon_social: userData.cot_razon_social,
-          contractorName: userData.rol === 'Contratista' ? (userData.cot_razon_social || 'Empresa Contratista') : null
-        };
-        // Also save to localStorage to persist
-        localStorage.setItem('capacitaUser', JSON.stringify(mappedUser));
-        return mappedUser;
-      } catch (err) {
-        console.error("Error decoding URL data:", err.message);
-        // If robust decoding fails, try simple atob as fallback
-        try {
-          const decodedString = atob(encodedData);
-          const userData = JSON.parse(decodedString);
+        if (userData) {
           const mappedUser = {
             id: userData.usu_usuario,
             name: userData.usu_usuario,
@@ -59,11 +40,12 @@ export default function App() {
             cot_razon_social: userData.cot_razon_social,
             contractorName: userData.rol === 'Contratista' ? (userData.cot_razon_social || 'Empresa Contratista') : null
           };
+          // Also save to localStorage to persist
           localStorage.setItem('capacitaUser', JSON.stringify(mappedUser));
           return mappedUser;
-        } catch (innerErr) {
-          console.error("Critical error parsing JSON from URL:", innerErr);
         }
+      } catch (err) {
+        console.error("Error decoding URL data:", err.message);
       }
     }
     
