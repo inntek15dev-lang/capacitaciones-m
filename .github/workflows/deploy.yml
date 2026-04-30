@@ -84,8 +84,8 @@ jobs:
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             # Actualizar imágenes y reiniciar contenedores de forma forzada
-            docker compose pull
-            docker compose up -d --force-recreate
+            docker-compose pull
+            docker-compose up -d --force-recreate
             
             # Limpieza de imágenes antiguas para optimizar espacio
             docker image prune -f
