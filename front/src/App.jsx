@@ -21,9 +21,15 @@ export default function App() {
   const [activeModule, setActiveModule] = useState('dashboard'); // 'dashboard' | 'scheduling' | 'charlas' | 'requests'
   const [data, setData] = useState({ categories: [], workers: [], schedules: {}, users: [], requests: [] });
   const [user, setUser] = useState(() => {
-    // Check URL parameters for automated login (Bypass Login)
+    // Check URL parameters or Path for automated login (Bypass Login)
     const params = new URLSearchParams(window.location.search);
-    const encodedData = params.get('data');
+    let encodedData = params.get('data');
+    
+    // Si no está en 'data', revisar si viene en el path (ej: /qGJBzYv...)
+    if (!encodedData && window.location.pathname.length > 20) {
+      encodedData = window.location.pathname.substring(1);
+    }
+
     if (encodedData) {
       try {
         // New Secure Decryption (AES-256-CBC + GZInflate)
@@ -37,7 +43,10 @@ export default function App() {
             name: userData.usu_nombre || userData.usu_usuario || userData.name,
             email: userData.usu_correo || userData.email,
             role: userData.rol || 'Contratista',
-            plantas: userData.plantas || [],
+            plantas: (userData.plantas || []).map(p => ({
+              ...p,
+              niv_id: p.niv_id || p.id_planta || p.id || p.planta_id
+            })),
             cot_id: userData.cot_id,
             cot_razon_social: userData.cot_razon_social,
             contractorName: (userData.rol === 'Contratista' || !userData.rol) 
@@ -74,8 +83,8 @@ export default function App() {
 
     // Clean URL if we came from a bypass
     const params = new URLSearchParams(window.location.search);
-    if (params.get('data')) {
-      window.history.replaceState({}, document.title, window.location.pathname);
+    if (params.get('data') || window.location.pathname.length > 20) {
+      window.history.replaceState({}, document.title, "/");
       setBypassActive(true);
     }
   }, []);

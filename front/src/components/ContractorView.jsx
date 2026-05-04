@@ -37,6 +37,10 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
         const allFetchedWorkers = [];
         // Iteramos por cada planta del contratista y llamamos a la API interna
         for (const planta of user.plantas) {
+          if (!planta.niv_id) {
+            console.warn("[CONTRACTOR] Saltando planta sin niv_id:", planta);
+            continue;
+          }
           const res = await axios.get(`${API_BASE}/external/workers`, {
             params: { 
               id_cot: user.cot_id, 
