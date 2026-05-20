@@ -1,7 +1,7 @@
 name: CI/CD Capacitaciones M - Preprod
 on:
   push:
-    branches: [ "UAT-review-1" ]
+    branches: [ "main" ]
 env:
   REGISTRY: ghcr.io
   IMAGE_API: ghcr.io/${{ github.repository }}-api
