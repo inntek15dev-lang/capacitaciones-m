@@ -1,32 +1,26 @@
-name: CI/CD CAPACITACIONES-M - Preprod
-
+name: CI/CD Capacitaciones M - Preprod
 on:
   push:
-    branches: [ "main" ]
-
+    branches: [ "UAT-review-1" ]
 env:
   REGISTRY: ghcr.io
   IMAGE_API: ghcr.io/${{ github.repository }}-api
   IMAGE_FRONT: ghcr.io/${{ github.repository }}-front
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
-
       - name: Log in al GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build y Push Backend
         uses: docker/build-push-action@v5
         with:
@@ -34,7 +28,6 @@ jobs:
           file: ./back/Dockerfile.back
           push: true
           tags: ${{ env.IMAGE_API }}:latest
-
       - name: Build y Push Frontend
         uses: docker/build-push-action@v5
         with:
@@ -42,25 +35,12 @@ jobs:
           file: ./front/Dockerfile.front
           push: true
           tags: ${{ env.IMAGE_FRONT }}:latest
-
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
-
-      - name: Fix permissions on server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            sudo mkdir -p /home/DOCKERS-PREPROD/CAPACITACIONES-M/
-            sudo chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} /home/DOCKERS-PREPROD/CAPACITACIONES-M/
-            sudo chmod -R 775 /home/DOCKERS-PREPROD/CAPACITACIONES-M/
-
       - name: Copiar docker-compose al servidor
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -70,7 +50,6 @@ jobs:
           source: "docker-compose.yml"
           target: "/home/DOCKERS-PREPROD/CAPACITACIONES-M/"
           overwrite: true
-
       - name: Ejecutar despliegue vía SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -83,29 +62,23 @@ jobs:
             # Login en el registro de GitHub
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # Limpiar contenedores antiguos para evitar conflictos
-            docker compose down --remove-orphans || true
-            
-            # Borrado forzado por nombre (por si quedaron huérfanos de otras ejecuciones)
-            docker rm -f capacitaciones-m_api capacitaciones-m_db capacitaciones-m_front || true
-
             # Actualizar imágenes y reiniciar contenedores de forma forzada
             docker compose pull
             docker compose up -d --force-recreate
             
             # --- Automatización de Base de Datos ---
-            echo "Esperando 15 segundos a que los servicios estabilicen..."
+            echo "Esperando 15 segundos a que los servicios se estabilicen..."
             sleep 15
             
             # Asegurar consistencia del esquema (Añadir columnas faltantes)
             echo "Verificando consistencia del esquema..."
-            docker exec capacitaciones-m_api node scripts/ensure_schema.js || echo "Skip ensure_schema"
+            docker exec capacitaciones_m_api node scripts/ensure_schema.js
             
-            # Poblar base de datos (Opcional)
-            # echo "Poblando base de datos..."
-            # docker exec capacitaciones-m_api node src/seed.js || echo "Skip seed"
+            # Ejecutamos el script de seed directamente (según estructura src/seed.js)
+            echo "Poblando base de datos con script personalizado..."
+            docker exec capacitaciones_m_api node src/seed.js
             
             # Limpieza de imágenes antiguas para optimizar espacio
             docker image prune -f
             
-            echo "🚀 Sistema desplegado correctamente."
+            echo "🚀 Sistema de capacitaciones desplegado y base de datos actualizada."
