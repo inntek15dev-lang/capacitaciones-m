@@ -17,7 +17,7 @@
     "front": {
         "containerName": "capacitaciones-m_front",
         "portExt": "8050",
-        "apiUrl": "https://prepro-capacitaciones-m-api.ovalcontrol.com/api/v1"
+        "apiUrl": "https://prepro-capacitaciones-m.ovalcontrol.com/"
     },
     "networkName": "capacitaciones-m"
 }
