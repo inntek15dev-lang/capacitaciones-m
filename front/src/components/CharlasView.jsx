@@ -3,12 +3,12 @@ import axios from 'axios';
 import { Plus, Edit2, Trash2, X, AlertCircle } from 'lucide-react';
 import { AeroButton, cn } from './ui/AeroUI';
 
-const API_BASE = 'http://localhost:3001/api/v1';
+const API_BASE = 'https://prepro-capacitaciones-m-api.ovalcontrol.com/api/v1';
 
 export default function CharlasView({ categories, user, onRefresh }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
-  
+
   // Form State
   const [formData, setFormData] = useState({
     name: '',
@@ -20,9 +20,9 @@ export default function CharlasView({ categories, user, onRefresh }) {
 
   const openNewModal = () => {
     setEditingCourse(null);
-    setFormData({ 
-      name: '', 
-      categoryId: categories[0]?.id || '', 
+    setFormData({
+      name: '',
+      categoryId: categories[0]?.id || '',
       maxPerSlot: 15,
       niv_id: user?.plantas?.[0]?.niv_id || '',
       plantaNombre: user?.plantas?.[0]?.nombre || ''
@@ -32,9 +32,9 @@ export default function CharlasView({ categories, user, onRefresh }) {
 
   const openEditModal = (course, categoryId) => {
     setEditingCourse(course);
-    setFormData({ 
-      name: course.name, 
-      categoryId, 
+    setFormData({
+      name: course.name,
+      categoryId,
       maxPerSlot: course.maxPerSlot,
       niv_id: course.niv_id || '',
       plantaNombre: course.plantaNombre || ''
@@ -112,14 +112,14 @@ export default function CharlasView({ categories, user, onRefresh }) {
                       <div className="text-xs text-slate-500 font-medium">ID: {course.id} • Capacidad: {course.maxPerSlot} personas/sesión</div>
                     </div>
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
+                      <button
                         onClick={() => openEditModal(course, cat.id)}
                         className="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-blue-100 hover:text-blue-600 transition-colors"
                         title="Editar Charla"
                       >
                         <Edit2 size={14} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDelete(course.id, course.name)}
                         className="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition-colors"
                         title="Eliminar Charla"
@@ -152,15 +152,15 @@ export default function CharlasView({ categories, user, onRefresh }) {
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Nombre de la Charla</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                   placeholder="Ej. Uso de Extintores"
                 />
@@ -168,10 +168,10 @@ export default function CharlasView({ categories, user, onRefresh }) {
 
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Categoría</label>
-                <select 
+                <select
                   required
                   value={formData.categoryId}
-                  onChange={e => setFormData({...formData, categoryId: e.target.value})}
+                  onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none"
                 >
                   <option value="" disabled>Seleccione una categoría...</option>
@@ -183,12 +183,12 @@ export default function CharlasView({ categories, user, onRefresh }) {
 
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Capacidad por sesión</label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   min="1"
                   required
                   value={formData.maxPerSlot}
-                  onChange={e => setFormData({...formData, maxPerSlot: e.target.value})}
+                  onChange={e => setFormData({ ...formData, maxPerSlot: e.target.value })}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                 />
               </div>
@@ -196,12 +196,12 @@ export default function CharlasView({ categories, user, onRefresh }) {
               {user?.plantas && user.plantas.length > 0 && (
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Planta Asignada</label>
-                  <select 
+                  <select
                     required
                     value={formData.niv_id}
                     onChange={e => {
                       const selectedPlant = user.plantas.find(p => p.niv_id.toString() === e.target.value);
-                      setFormData({...formData, niv_id: e.target.value, plantaNombre: selectedPlant?.nombre || ''});
+                      setFormData({ ...formData, niv_id: e.target.value, plantaNombre: selectedPlant?.nombre || '' });
                     }}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none"
                   >
@@ -214,15 +214,15 @@ export default function CharlasView({ categories, user, onRefresh }) {
               )}
 
               <div className="pt-4 flex gap-3">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={closeModal}
                   className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-colors"
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-bold text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30"
                 >
                   Guardar

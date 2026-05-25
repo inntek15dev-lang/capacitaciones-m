@@ -273,8 +273,7 @@ IV. VISTAS DE ARQUITECTURA (IEEE 1016)
 - *Constraint:* On Delete SET NULL para servicio_id, On Delete CASCADE para asignaciones.
 
 ### 2. Vista de Integración (Contratos API)
-- `Backend URL`: http://localhost:3001
-- `Frontend URL`: http://localhost:3000
+
 - `GET /api/v1/data`: Retorna toda la DB JSON.
 - `POST /api/v1/courses`: Crea un nuevo curso (charla) en una categoría.
 - `PUT /api/v1/courses/:id`: Actualiza una charla existente.
