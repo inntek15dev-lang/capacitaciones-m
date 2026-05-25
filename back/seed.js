@@ -1,4 +1,3 @@
-// IEEE Trace: [REQ-TEST-DATA] | [US-SEED] | [Category, Course, User, Worker]
 const sequelize = require('../database/db');
 const Category = require('../models/Category');
 const Course = require('../models/Course');
@@ -9,14 +8,6 @@ const ScheduleSlot = require('../models/ScheduleSlot');
 const seed = async () => {
     try {
         console.log('Iniciando el proceso de seeding...');
-
-        // En un entorno de producción/pre-producción, la sincronización debe ser manejada por migraciones.
-        // Para desarrollo, `alter: true` o `force: true` es común, pero `force:true` es destructivo.
-        // Comentamos `force:true` para hacer este script más seguro y adaptable.
-        // await sequelize.sync({ force: true });
-        // console.log('Base de datos sincronizada. Tablas recreadas.');
-
-        // --- 1. Creación de Categorías ---
         console.log('Verificando/Creando categorías...');
         const categoriesData = [
             { id: 'cat-seg', name: 'SEGURIDAD' },
@@ -33,7 +24,6 @@ const seed = async () => {
         }
         console.log('Categorías verificadas.');
 
-        // --- 2. Creación de Cursos (Charlas) ---
         console.log('Verificando/Creando cursos de ejemplo...');
         const coursesData = [
             { id: 'c-seg-01', name: 'Uso correcto de EPP', categoryId: 'cat-seg', maxPerSlot: 20 },
@@ -48,7 +38,6 @@ const seed = async () => {
         }
         console.log('Cursos verificados.');
 
-        // --- 3. Creación de Usuarios ---
         console.log('Verificando/Creando usuarios de prueba...');
         const usersData = [
             { id: 'user-admin', username: 'admin', password: 'admin_password', role: 'admin', name: 'Administrador' },
@@ -60,7 +49,6 @@ const seed = async () => {
         }
         console.log('Usuarios verificados.');
 
-        // --- 4. Creación de Trabajadores (locales) ---
         console.log('Verificando/Creando trabajadores de prueba...');
         const workersData = [
             { id: 'worker-001', name: 'Juan Pérez', company: 'Constructora XYZ' },
@@ -73,7 +61,6 @@ const seed = async () => {
         }
         console.log('Trabajadores verificados.');
 
-        // --- 5. Creación de Horarios (Slots) ---
         console.log('Verificando/Creando horarios de ejemplo...');
         const slotsData = [
             { id: 'slot-001', courseId: 'c-seg-01', date: '2026-06-15', time: '09:00', max: 20, location: 'Sala 1' },
@@ -85,7 +72,6 @@ const seed = async () => {
             if (created) console.log(`Horario para curso '${slot.courseId}' en fecha '${slot.date}' creado.`);
         }
         console.log('Horarios verificados.');
-
 
         console.log('\n--- Proceso de Seeding completado ---');
         console.log('La base de datos ha sido inicializada con datos de prueba.');
@@ -102,7 +88,6 @@ const seed = async () => {
 
 const runSeed = async () => {
     await seed();
-    // Cierra la conexión a la base de datos para que el script termine.
     await sequelize.close();
 }
 
