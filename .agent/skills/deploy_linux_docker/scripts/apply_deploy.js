@@ -24,9 +24,10 @@ const placeholders = {
   '{{PORT_API_INT}}': config.api.portInt,
   '{{PORT_FRONT_EXT}}': config.front.portExt,
   '{{DOMAIN_API}}': config.api.domain,
+  '{{DOMAIN_FRONT}}': config.front.domain,
   '{{DB_NAME}}': config.db.name,
-  '{{NETWORK_NAME}}': config.networkName,
-  '{{API_URL}}': config.front.apiUrl
+  '{{NETWORK_NAME}}': config.networkName
+
 };
 
 function replacePlaceholders(content) {

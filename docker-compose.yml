@@ -3,7 +3,7 @@ version: '3.8'
 services:
   db:
     image: mysql:8.0
-    container_name: capacitaciones-m_db
+    container_name: capacitaciones-m-db
     restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
@@ -19,7 +19,7 @@ services:
 
   api:
     image: ghcr.io/inntek15dev-lang/capacitaciones-m-api:latest
-    container_name: capacitaciones-m_api
+    container_name: capacitaciones-m-api
     restart: always
     environment:
       - NODE_ENV=preproduction
@@ -39,7 +39,7 @@ services:
 
   frontend:
     image: ghcr.io/inntek15dev-lang/capacitaciones-m-front:latest
-    container_name: capacitaciones-m_front
+    container_name: capacitaciones-m-front
     restart: always
     environment:
       - VITE_API_URL=https://prepro-capacitaciones-m-api.ovalcontrol.com/api/v1

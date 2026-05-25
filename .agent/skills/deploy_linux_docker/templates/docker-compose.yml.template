@@ -42,7 +42,7 @@ services:
     container_name: {{CONTAINER_NAME_FRONT}}
     restart: always
     environment:
-      - VITE_API_URL={{API_URL}}
+      - VITE_API_URL={{DOMAIN_API}}
     ports:
       - "127.0.0.1:{{PORT_FRONT_EXT}}:80"
     depends_on:

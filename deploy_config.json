@@ -4,20 +4,20 @@
     "branch": "main",
     "serverPath": "/home/DOCKERS-PREPROD/CAPACITACIONES-M",
     "db": {
-        "containerName": "capacitaciones-m_db",
+        "containerName": "capacitaciones-m-db",
         "name": "capacitaciones-m_db",
         "portExt": "3350"
     },
     "api": {
-        "containerName": "capacitaciones-m_api",
+        "containerName": "capacitaciones-m-api",
         "portExt": "4050",
         "portInt": "4050",
-        "domain": "https://prepro-capacitaciones-m-api.ovalcontrol.com/"
+        "domain": "https://prepro-capacitaciones-m-api.ovalcontrol.com/api/v1"
     },
     "front": {
-        "containerName": "capacitaciones-m_front",
+        "containerName": "capacitaciones-m-front",
         "portExt": "8050",
-        "apiUrl": "https://prepro-capacitaciones-m.ovalcontrol.com/"
+        "domain": "https://prepro-capacitaciones-m.ovalcontrol.com/"
     },
     "networkName": "capacitaciones-m"
 }
