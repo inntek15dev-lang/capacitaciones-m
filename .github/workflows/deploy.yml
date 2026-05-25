@@ -35,6 +35,13 @@ jobs:
           push: true
           tags: ${{ env.IMAGE_API }}:latest
 
+      - name: Create Frontend .env file
+        run: |
+          echo "VITE_API_BASE_URL=http://${{ secrets.SERVER_IP }}:3001" > ./front/.env
+          echo "Frontend .env created with API URL: $(cat ./front/.env)"
+        # La URL del API debe ser la IP pública o dominio del servidor, accesible desde el navegador del cliente.
+        # El puerto es el que se expone en docker-compose.yml para la API.
+
       - name: Build y Push Frontend
         uses: docker/build-push-action@v5
         with:

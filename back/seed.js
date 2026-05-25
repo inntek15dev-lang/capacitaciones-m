@@ -10,62 +10,81 @@ const seed = async () => {
     try {
         console.log('Iniciando el proceso de seeding...');
 
-        // Sincronizar la base de datos, `force: true` eliminará las tablas existentes y las recreará.
-        // Es útil para un entorno de desarrollo limpio.
-        await sequelize.sync({ force: true });
-        console.log('Base de datos sincronizada. Tablas recreadas.');
+        // En un entorno de producción/pre-producción, la sincronización debe ser manejada por migraciones.
+        // Para desarrollo, `alter: true` o `force: true` es común, pero `force:true` es destructivo.
+        // Comentamos `force:true` para hacer este script más seguro y adaptable.
+        // await sequelize.sync({ force: true });
+        // console.log('Base de datos sincronizada. Tablas recreadas.');
 
         // --- 1. Creación de Categorías ---
-        console.log('Creando categorías...');
-        const categories = await Category.bulkCreate([
+        console.log('Verificando/Creando categorías...');
+        const categoriesData = [
             { id: 'cat-seg', name: 'SEGURIDAD' },
             { id: 'cat-cal', name: 'Calidad' },
             { id: 'cat-amb', name: 'Medio Ambiente' },
             { id: 'cat-ops', name: 'Operaciones' },
-        ]);
-        console.log('Categorías creadas exitosamente.');
+        ];
+
+        for (const cat of categoriesData) {
+            const [category, created] = await Category.findOrCreate({ where: { id: cat.id }, defaults: cat });
+            if (created) {
+                console.log(`Categoría '${category.name}' creada.`);
+            }
+        }
+        console.log('Categorías verificadas.');
 
         // --- 2. Creación de Cursos (Charlas) ---
-        console.log('Creando cursos de ejemplo...');
-        const courses = await Course.bulkCreate([
-            // Cursos de Seguridad
+        console.log('Verificando/Creando cursos de ejemplo...');
+        const coursesData = [
             { id: 'c-seg-01', name: 'Uso correcto de EPP', categoryId: 'cat-seg', maxPerSlot: 20 },
             { id: 'c-seg-02', name: 'Prevención de riesgos eléctricos', categoryId: 'cat-seg', maxPerSlot: 15 },
             { id: 'c-seg-03', name: 'Trabajo seguro en alturas', categoryId: 'cat-seg', maxPerSlot: 10, niv_id: 4068283, plantaNombre: 'Planta Principal' },
-
-            // Cursos de Calidad
             { id: 'c-cal-01', name: 'Introducción a ISO 9001', categoryId: 'cat-cal', maxPerSlot: 25 },
-
-            // Cursos de Medio Ambiente
             { id: 'c-amb-01', name: 'Manejo de residuos peligrosos', categoryId: 'cat-amb', maxPerSlot: 15 },
-        ]);
-        console.log('Cursos creados exitosamente.');
+        ];
+        for (const course of coursesData) {
+            const [, created] = await Course.findOrCreate({ where: { id: course.id }, defaults: course });
+            if (created) console.log(`Curso '${course.name}' creado.`);
+        }
+        console.log('Cursos verificados.');
 
         // --- 3. Creación de Usuarios ---
-        console.log('Creando usuarios de prueba...');
-        const users = await User.bulkCreate([
+        console.log('Verificando/Creando usuarios de prueba...');
+        const usersData = [
             { id: 'user-admin', username: 'admin', password: 'admin_password', role: 'admin', name: 'Administrador' },
             { id: 'user-contratista', username: 'contratista', password: 'contra_password', role: 'contractor', name: 'Contratista Ejemplo' },
-        ]);
-        console.log('Usuarios creados exitosamente.');
+        ];
+        for (const user of usersData) {
+            const [, created] = await User.findOrCreate({ where: { id: user.id }, defaults: user });
+            if (created) console.log(`Usuario '${user.username}' creado.`);
+        }
+        console.log('Usuarios verificados.');
 
         // --- 4. Creación de Trabajadores (locales) ---
-        console.log('Creando trabajadores de prueba...');
-        const workers = await Worker.bulkCreate([
+        console.log('Verificando/Creando trabajadores de prueba...');
+        const workersData = [
             { id: 'worker-001', name: 'Juan Pérez', company: 'Constructora XYZ' },
             { id: 'worker-002', name: 'Ana Gómez', company: 'Constructora XYZ' },
             { id: 'worker-003', name: 'Luis Martínez', company: 'Servicios Industriales ABC' },
-        ]);
-        console.log('Trabajadores creados exitosamente.');
+        ];
+        for (const worker of workersData) {
+            const [, created] = await Worker.findOrCreate({ where: { id: worker.id }, defaults: worker });
+            if (created) console.log(`Trabajador '${worker.name}' creado.`);
+        }
+        console.log('Trabajadores verificados.');
 
         // --- 5. Creación de Horarios (Slots) ---
-        console.log('Creando horarios de ejemplo...');
-        const slots = await ScheduleSlot.bulkCreate([
+        console.log('Verificando/Creando horarios de ejemplo...');
+        const slotsData = [
             { id: 'slot-001', courseId: 'c-seg-01', date: '2026-06-15', time: '09:00', max: 20, location: 'Sala 1' },
             { id: 'slot-002', courseId: 'c-seg-01', date: '2026-06-16', time: '14:00', max: 20, location: 'Sala 2' },
             { id: 'slot-003', courseId: 'c-cal-01', date: '2026-06-15', time: '11:00', max: 25, location: 'Auditorio' },
-        ]);
-        console.log('Horarios creados exitosamente.');
+        ];
+        for (const slot of slotsData) {
+            const [, created] = await ScheduleSlot.findOrCreate({ where: { id: slot.id }, defaults: slot });
+            if (created) console.log(`Horario para curso '${slot.courseId}' en fecha '${slot.date}' creado.`);
+        }
+        console.log('Horarios verificados.');
 
 
         console.log('\n--- Proceso de Seeding completado ---');
