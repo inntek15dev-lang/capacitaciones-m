@@ -351,8 +351,9 @@ app.put('/api/v1/requests/:id', async (req, res) => {
         return res.status(400).json({ error: 'Ya no hay cupos suficientes para aprobar esta solicitud' });
       }
 
-      // Auto-enroll workers
-      await slot.addWorkers(request.workerIds);
+      // Auto-enroll workers (extracting IDs if stored as objects)
+      const ids = (request.workerIds || []).map(w => typeof w === 'object' ? w.id : w);
+      await slot.addWorkers(ids);
     }
 
     await request.update({ status });

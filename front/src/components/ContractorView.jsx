@@ -99,7 +99,8 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
     return myRequests.filter(r => {
       if (showEvaluatedOnly) {
         const slot = (data?.schedules?.[r.courseId] || []).find(s => s.id === r.slotId);
-        const isEval = r.status === 'approved' && slot?.enrolled.filter(e => r.workerIds.includes(e.id)).every(e => e.evaluation !== 'pending');
+        const reqIds = (r.workerIds || []).map(w => typeof w === 'object' ? w.id : w);
+        const isEval = r.status === 'approved' && slot?.enrolled.filter(e => reqIds.includes(e.id)).every(e => e.evaluation !== 'pending');
         if (!isEval) return false;
       }
       return true;
@@ -116,8 +117,17 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
     if (requestForm.workerIds.length === 0) return alert('Seleccione al menos un trabajador');
     
     try {
+      const mappedWorkers = requestForm.workerIds.map(id => {
+        const worker = myWorkers.find(w => w.id === id);
+        return {
+          id: id,
+          name: worker ? (worker.nombre_completo || worker.name) : 'Desconocido'
+        };
+      });
+
       await axios.post(`${API_BASE}/requests`, {
         ...requestForm,
+        workerIds: mappedWorkers,
         contractorId: user.id,
         contractorName: user.contractorName
       });
@@ -401,9 +411,12 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
                                  {slot && new Date(slot.date) < new Date() && req.status === 'approved' && (
                                     <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-1.5 py-0.5 rounded-full">Cursada</span>
                                  )}
-                                 {req.status === 'approved' && slot?.enrolled.filter(e => req.workerIds.includes(e.id)).every(e => e.evaluation !== 'pending') && (
-                                    <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-1.5 py-0.5 rounded-full">Evaluada</span>
-                                 )}
+                                 {req.status === 'approved' && slot?.enrolled.filter(e => {
+                                     const reqIds = (req.workerIds || []).map(w => typeof w === 'object' ? w.id : w);
+                                     return reqIds.includes(e.id);
+                                  }).every(e => e.evaluation !== 'pending') && (
+                                     <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-1.5 py-0.5 rounded-full">Evaluada</span>
+                                  )}
                               </div>
                               <div className="flex items-center gap-3">
                                 <p className="text-xs font-medium text-slate-400">
@@ -541,10 +554,12 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
                 <div className="flex flex-col h-full">
                     <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Personal en Solicitud ({selectedRequest.workerIds.length})</label>
                     <div className="flex-1 bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-3 overflow-y-auto max-h-48">
-                        {selectedRequest.workerIds.map(wid => {
-                            const worker = data.workers.find(w => w.id === wid);
-                            const slot = (data.schedules[selectedRequest.courseId] || []).find(s => s.id === selectedRequest.slotId);
-                            const enrollment = slot?.enrolled.find(e => e.id === wid);
+                        {(selectedRequest.workerIds || []).map(w => {
+                            const wid = typeof w === 'object' ? w.id : w;
+                            const worker = data?.workers?.find(wk => wk.id === wid);
+                            const wname = typeof w === 'object' ? w.name : (worker?.nombre_completo || worker?.name || 'Desconocido');
+                            const slot = (data?.schedules?.[selectedRequest.courseId] || []).find(s => s.id === selectedRequest.slotId);
+                            const enrollment = slot?.enrolled?.find(e => e.id === wid);
 
                             return (
                                 <div key={wid} className="flex items-center justify-between gap-3">
@@ -553,8 +568,12 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
                                             <Users size={14} />
                                         </div>
                                         <div>
-                                            <div className="text-[10px] font-black text-slate-800 truncate max-w-[120px]">{worker?.nombre_completo || 'Desconocido'}</div>
-                                            <div className="text-[8px] font-bold text-slate-400">{worker?.rut} • {worker?.cargo}</div>
+                                            <div className="text-[10px] font-black text-slate-800 truncate max-w-[150px]">
+                                                {wname}
+                                            </div>
+                                            <div className="text-[8px] font-bold text-slate-400">
+                                                ID: {wid} {worker?.rut ? `• RUT: ${worker.rut}` : ''} {worker?.cargo ? `• ${worker.cargo}` : ''}
+                                            </div>
                                         </div>
                                     </div>
                                     

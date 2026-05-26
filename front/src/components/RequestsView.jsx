@@ -31,7 +31,8 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
       // If toggle is ON, only show evaluated
       if (showEvaluatedOnly) {
         const slot = (data.schedules[r.courseId] || []).find(s => s.id === r.slotId);
-        const isEval = r.status === 'approved' && slot?.enrolled.filter(e => r.workerIds.includes(e.id)).every(e => e.evaluation !== 'pending');
+        const reqIds = (r.workerIds || []).map(w => typeof w === 'object' ? w.id : w);
+        const isEval = r.status === 'approved' && slot?.enrolled.filter(e => reqIds.includes(e.id)).every(e => e.evaluation !== 'pending');
         if (!isEval) return false;
       }
 
@@ -71,7 +72,8 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
     if (!slot) return showToast('No se encontró información de la sesión', 'error');
 
     // Initialize evaluation data from current enrollments if they have status
-    const initialEval = req.workerIds.map(wid => {
+    const initialEval = (req.workerIds || []).map(w => {
+      const wid = typeof w === 'object' ? w.id : w;
       const enrollment = slot.enrolled.find(e => e.id === wid);
       return { workerId: wid, status: enrollment?.evaluation || 'pending' };
     });
@@ -156,7 +158,10 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
               const course = coursesMap[req.courseId];
               const slot = (data.schedules[req.courseId] || []).find(s => s.id === req.slotId);
               const isPast = slot && new Date(slot.date) < new Date();
-              const isEvaluated = req.status === 'approved' && slot?.enrolled.filter(e => req.workerIds.includes(e.id)).every(e => e.evaluation !== 'pending');
+              const isEvaluated = req.status === 'approved' && slot?.enrolled.filter(e => {
+                const reqIds = (req.workerIds || []).map(w => typeof w === 'object' ? w.id : w);
+                return reqIds.includes(e.id);
+              }).every(e => e.evaluation !== 'pending');
 
               return (
                 <div key={req.id} className="bg-white p-6 rounded-[32px] border border-slate-200 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
@@ -320,8 +325,10 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
               <div className="flex flex-col h-full">
                 <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Personal ({selectedRequest.workerIds.length})</label>
                 <div className="flex-1 bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-3 overflow-y-auto max-h-48">
-                  {selectedRequest.workerIds.map(wid => {
-                    const worker = data.workers.find(w => w.id === wid);
+                  {(selectedRequest.workerIds || []).map(w => {
+                    const wid = typeof w === 'object' ? w.id : w;
+                    const worker = data.workers.find(wk => wk.id === wid);
+                    const wname = typeof w === 'object' ? w.name : (worker?.name || 'Desconocido');
                     const slot = (data.schedules[selectedRequest.courseId] || []).find(s => s.id === selectedRequest.slotId);
                     const enrollment = slot?.enrolled.find(e => e.id === wid);
 
@@ -332,8 +339,8 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
                             <Users size={14} />
                           </div>
                           <div className="truncate">
-                            <div className="text-[10px] font-black text-slate-800 truncate">{worker?.name || 'Desconocido'}</div>
-                            <div className="text-[8px] font-bold text-slate-400">{worker?.rut}</div>
+                            <div className="text-[10px] font-black text-slate-800 truncate">{wname}</div>
+                            <div className="text-[8px] font-bold text-slate-400">ID: {wid} {worker?.rut ? `• RUT: ${worker.rut}` : ''}</div>
                           </div>
                         </div>
 
