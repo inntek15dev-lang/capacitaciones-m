@@ -189,7 +189,7 @@ app.post('/api/v1/enroll', async (req, res) => {
     if (!slot) return res.status(404).json({ error: 'Slot not found' });
 
     // Check capacity
-    const currentEnrolled = slot.Workers.length;
+    const currentEnrolled = (slot.workers || slot.Workers || []).length;
     const available = slot.max - currentEnrolled;
 
     if (workerIds.length > available) {
@@ -305,7 +305,8 @@ app.post('/api/v1/requests', async (req, res) => {
     });
 
     if (!slot) return res.status(404).json({ error: 'Slot not found' });
-    if (slot.workers.length + workerIds.length > slot.max) {
+    const currentEnrolled = (slot.workers || slot.Workers || []).length;
+    if (currentEnrolled + workerIds.length > slot.max) {
       return res.status(400).json({ error: 'No hay cupos suficientes para esta solicitud' });
     }
 
@@ -347,7 +348,8 @@ app.put('/api/v1/requests/:id', async (req, res) => {
       if (!slot) return res.status(404).json({ error: 'Slot associated with request not found' });
 
       // Re-validate capacity
-      if (slot.workers.length + request.workerIds.length > slot.max) {
+      const currentEnrolled = (slot.workers || slot.Workers || []).length;
+      if (currentEnrolled + request.workerIds.length > slot.max) {
         return res.status(400).json({ error: 'Ya no hay cupos suficientes para aprobar esta solicitud' });
       }
 
