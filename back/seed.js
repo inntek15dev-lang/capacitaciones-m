@@ -1,9 +1,9 @@
-const sequelize = require('../database/db');
-const Category = require('../models/Category');
-const Course = require('../models/Course');
-const User = require('../models/User');
-const Worker = require('../models/Worker');
-const ScheduleSlot = require('../models/ScheduleSlot');
+const sequelize = require('./database/db');
+const Category = require('./models/Category');
+const Course = require('./models/Course');
+const User = require('./models/User');
+const Worker = require('./models/Worker');
+const ScheduleSlot = require('./models/ScheduleSlot');
 
 const seed = async () => {
     try {
