@@ -19,11 +19,13 @@ const seed = async () => {
             user: process.env.DB_USER || 'root',
             password: process.env.DB_ROOT_PASSWORD || '',
         });
-        await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
+        // Reset database to resolve any InnoDB metadata corruption / foreign key alterations
+        await connection.query(`DROP DATABASE IF EXISTS \`${dbName}\`;`);
+        await connection.query(`CREATE DATABASE \`${dbName}\`;`);
         await connection.end();
 
-        // Sincronizar el esquema
-        await sequelize.sync({ alter: true });
+        // Sincronizar el esquema (creación desde cero)
+        await sequelize.sync({ force: true });
 
         // 2. Poblar Categorías y Cursos
         console.log('Poblando categorías y cursos...');

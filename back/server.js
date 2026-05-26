@@ -366,6 +366,21 @@ app.put('/api/v1/requests/:id', async (req, res) => {
   }
 });
 
+// Delete request
+app.delete('/api/v1/requests/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const request = await Request.findByPk(id);
+    if (!request) return res.status(404).json({ error: 'Request not found' });
+
+    await request.destroy();
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete request' });
+  }
+});
+
 app.post('/api/v1/enrollments/evaluation', async (req, res) => {
   try {
     const { slotId, evaluations } = req.body; // Array of { workerId, status }

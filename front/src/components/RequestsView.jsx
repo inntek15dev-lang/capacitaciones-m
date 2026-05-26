@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import axios from 'axios';
-import { ClipboardList, Users, CheckCircle2, XCircle, Eye, Calendar, Clock, ChevronRight, GraduationCap, ArrowRight, Plus, Monitor, MapPin } from 'lucide-react';
+import { ClipboardList, Users, CheckCircle2, XCircle, Eye, Calendar, Clock, ChevronRight, GraduationCap, ArrowRight, Plus, Monitor, MapPin, Trash2 } from 'lucide-react';
 import { AeroButton, cn } from './ui/AeroUI';
 
 import config from '../config';
@@ -64,6 +64,18 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
       onRefresh();
     } catch (err) {
       showToast(err.response?.data?.error || 'Error al actualizar solicitud', 'error');
+    }
+  };
+
+  const handleDeleteRequest = async (requestId) => {
+    if (window.confirm('¿Estás seguro de eliminar esta solicitud?')) {
+      try {
+        await axios.delete(`${API_BASE}/requests/${requestId}`);
+        showToast('Solicitud eliminada correctamente');
+        onRefresh();
+      } catch (err) {
+        showToast(err.response?.data?.error || 'Error al eliminar solicitud', 'error');
+      }
     }
   };
 
@@ -220,8 +232,16 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
                     <button
                       onClick={() => setSelectedRequest(req)}
                       className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all border border-transparent hover:border-blue-100"
+                      title="Ver Detalle"
                     >
                       <Eye size={20} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteRequest(req.id)}
+                      className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all border border-transparent hover:border-red-100"
+                      title="Eliminar Solicitud"
+                    >
+                      <Trash2 size={20} />
                     </button>
                     <ChevronRight size={16} className="text-slate-200" />
                   </div>
