@@ -146,109 +146,12 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
   };
 
   const handleDownloadCertificate = (worker, req) => {
-    const course = courses.find(c => c.id === req.courseId);
-    const slot = (data.schedules[req.courseId] || []).find(s => s.id === req.slotId);
-    const dateStr = slot ? slot.date : new Date().toLocaleDateString();
-    const verificationCode = `CF-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-
-    const certHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Certificado - ${worker.name}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-        <style>
-          body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-          .certificate { 
-            width: 800px; 
-            padding: 80px; 
-            background: white; 
-            border-radius: 40px; 
-            box-shadow: 0 40px 100px rgba(0,0,0,0.05); 
-            position: relative; 
-            overflow: hidden; 
-            border: 1px solid #e2e8f0;
-            text-align: center;
-          }
-          .decor-1 { position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%); opacity: 0.1; filter: blur(40px); border-radius: 50%; }
-          .decor-2 { position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); opacity: 0.1; filter: blur(40px); border-radius: 50%; }
-          
-          .header { text-transform: uppercase; letter-spacing: 0.2em; font-weight: 900; color: #64748b; font-size: 14px; margin-bottom: 20px; }
-          .title { font-size: 48px; font-weight: 900; color: #1e293b; margin-bottom: 40px; line-height: 1.1; }
-          .subtitle { color: #94a3b8; font-size: 18px; margin-bottom: 60px; }
-          
-          .worker-info { margin-bottom: 60px; }
-          .worker-name { font-size: 32px; font-weight: 900; color: #3b82f6; margin-bottom: 10px; }
-          .worker-rut { font-size: 16px; font-weight: 700; color: #64748b; }
-          
-          .course-info { padding: 40px; background: #f1f5f9; border-radius: 32px; margin-bottom: 60px; }
-          .course-name { font-size: 24px; font-weight: 900; color: #1e293b; margin-bottom: 10px; }
-          .course-date { font-size: 14px; font-weight: 700; color: #64748b; }
-          
-          .footer { display: flex; justify-content: space-between; align-items: flex-end; }
-          .verification { text-align: left; }
-          .v-code { font-family: monospace; font-size: 12px; color: #94a3b8; }
-          .v-label { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 5px; }
-          
-          .signature { text-align: right; }
-          .sig-line { width: 200px; height: 2px; background: #e2e8f0; margin-bottom: 10px; }
-          .sig-text { font-size: 12px; font-weight: 700; color: #64748b; }
-
-          @media print {
-            body { background: white; }
-            .certificate { box-shadow: none; border: none; }
-            .no-print { display: none; }
-          }
-          
-          .print-btn {
-            position: fixed; top: 20px; right: 20px;
-            padding: 15px 30px; background: #3b82f6; color: white;
-            border: none; border-radius: 15px; font-weight: 900;
-            cursor: pointer; box-shadow: 0 10px 20px rgba(59,130,246,0.3);
-            text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px;
-          }
-        </style>
-      </head>
-      <body>
-        <button class="print-btn no-print" onclick="window.print()">Imprimir / Guardar PDF</button>
-        <div class="certificate">
-          <div class="decor-1"></div>
-          <div class="decor-2"></div>
-          
-          <div class="header">Certificado de Capacitación</div>
-          <div class="title">Otorgado a:</div>
-          
-          <div class="worker-info">
-            <div class="worker-name">${worker.name}</div>
-            <div class="worker-rut">RUT: ${worker.rut}</div>
-          </div>
-          
-          <div class="subtitle">Por haber aprobado satisfactoriamente la charla de inducción:</div>
-          
-          <div class="course-info">
-            <div class="course-name">${course?.name || 'Capacitación General'}</div>
-            <div class="course-date">Realizada el ${dateStr}</div>
-          </div>
-          
-          <div class="footer">
-            <div class="verification">
-              <div class="v-label">CÓDIGO VERIFICACIÓN</div>
-              <div class="v-code">${verificationCode}</div>
-            </div>
-            <div class="signature">
-              <div class="sig-line"></div>
-              <div class="sig-text">Firma y Timbre Administrador</div>
-              <div class="sig-text" style="font-size: 10px; font-weight: 400;">CapacitaFlow System</div>
-            </div>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-
-    const win = window.open('', '_blank');
-    win.document.write(certHtml);
-    win.document.close();
+    const link = document.createElement('a');
+    link.href = '/template-certificado.pdf';
+    link.download = `Certificado-${worker.nombre_completo || worker.name || 'Trabajador'}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
