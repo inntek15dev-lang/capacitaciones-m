@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      '/api': 'https://prepro-capacitaciones-m-api.ovalcontrol.com/api/v1'
+      '/api': process.env.VITE_API_URL || 'http://localhost:3001'
     }
   }
 })

@@ -5,7 +5,7 @@
 const config = {
     API_BASE: (window._env_ && window._env_.VITE_API_URL)
         ? window._env_.VITE_API_URL
-        : (import.meta.env.VITE_API_URL || 'https://prepro-capacitaciones-m-api.ovalcontrol.com/api/v1')
+        : (import.meta.env.VITE_API_URL || '')
 };
 
 export default config;
