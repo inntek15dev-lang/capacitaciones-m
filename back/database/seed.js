@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Worker = require('../models/Worker');
 const ScheduleSlot = require('../models/ScheduleSlot');
 const Enrollment = require('../models/Enrollment');
+const Request = require('../models/Request');
 const initialData = require('./initial.json');
 const mysql = require('mysql2/promise');
 
