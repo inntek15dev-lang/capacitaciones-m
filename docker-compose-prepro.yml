@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: prepro-capacitaciones-m-db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:3350:3306"
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    networks:
+      - prepro-capacitaciones-m
+
+  api:
+    image: ghcr.io/inntek15dev-lang/capacitaciones-m-api:latest
+    container_name: prepro-capacitaciones-m-api
+    restart: always
+    environment:
+      - NODE_ENV=preproduction
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - PORT=4050
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:4050:4050"
+    depends_on:
+      - db
+    networks:
+      - prepro-capacitaciones-m
+
+  frontend:
+    image: ghcr.io/inntek15dev-lang/capacitaciones-m-front:latest
+    container_name: prepro-capacitaciones-m-front
+    restart: always
+    environment:
+      - VITE_API_URL=https://prepro-capacitaciones-m-api.ovalcontrol.com/api/v1
+    ports:
+      - "127.0.0.1:8050:80"
+    depends_on:
+      - api
+    networks:
+      - prepro-capacitaciones-m
+
+networks:
+  prepro-capacitaciones-m:
+    driver: bridge

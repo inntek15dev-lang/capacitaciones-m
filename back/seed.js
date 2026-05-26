@@ -94,38 +94,3 @@ const runSeed = async () => {
 runSeed();
 
 module.exports = seed;
-
-```
-
-### ¿Cómo usarlo?
-
-1.  **Guarda el archivo**: Coloca el código anterior en un nuevo archivo llamado `seed.js` dentro de la carpeta `back / src`.
-
-2.  **Añade el script a `package.json`**: Para que sea fácil de ejecutar, abre el archivo `package.json` que está en la carpeta `back / ` y agrega un script para el seeder:
-
-    ```json
-"scripts": {
-    "start": "node server.js",
-        "dev": "nodemon server.js",
-            "seed": "node src/seed.js"
-},
-```
-
-3.  **Ejecuta el seeder**: Abre una terminal en la carpeta `back / ` y ejecuta el siguiente comando. Esto borrará los datos actuales y los reemplazará con los datos de prueba.
-
-    ```bash
-    npm run seed
-    ```
-
-4.  **Inicia tu servidor**: Una vez que el seeder termine, inicia tu backend como de costumbre.
-
-    ```bash
-    npm run dev
-    ```
-
-Ahora, al recargar tu aplicación frontend, deberías ver la categoría "SEGURIDAD" y las demás que hemos agregado, junto con sus cursos asociados. ¡Espero que esto resuelva el problema!
-
-<!--
-[PROMPT_SUGGESTION]¿Cómo puedo modificar el frontend para que muestre un ícono diferente para cada categoría?[/PROMPT_SUGGESTION]
-[PROMPT_SUGGESTION]Explícame cómo funciona la relación entre Cursos, Horarios y Trabajadores en el modelo de datos.[/PROMPT_SUGGESTION]
--->

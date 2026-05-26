@@ -40,7 +40,8 @@ function replacePlaceholders(content) {
 
 const filesToGenerate = [
   { template: 'deploy.yml.template', target: '.github/workflows/deploy.yml' },
-  { template: 'docker-compose.yml.template', target: 'docker-compose.yml' },
+  { template: 'docker-compose.yml.template', target: 'docker-compose-prepro.yml' },
+  { template: 'docker-compose.yml.template', target: 'docker-compose-prod.yml' },
   { template: 'Dockerfile.back.template', target: 'back/Dockerfile.back' },
   { template: 'entrypoint.sh.template', target: 'back/entrypoint.sh' },
   { template: 'Dockerfile.front.template', target: 'front/Dockerfile.front' },

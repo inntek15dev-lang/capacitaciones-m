@@ -6,4 +6,5 @@ npm-debug.log
 .gitignore
 Dockerfile
 Dockerfile.front
-docker-compose.yml
+docker-compose-prepro.yml
+docker-compose-prod.yml
