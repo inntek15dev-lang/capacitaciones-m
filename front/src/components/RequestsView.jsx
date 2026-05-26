@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import axios from 'axios';
-import { ClipboardList, Users, CheckCircle2, XCircle, Eye, Calendar, Clock, ChevronRight, GraduationCap, ArrowRight, Plus, Monitor, MapPin, Trash2 } from 'lucide-react';
+import { ClipboardList, Users, CheckCircle2, XCircle, Eye, Calendar, Clock, ChevronRight, GraduationCap, ArrowRight, Plus, Monitor, MapPin, Trash2, Download } from 'lucide-react';
 import { AeroButton, cn } from './ui/AeroUI';
+import { downloadCertificate } from '../utils/pdfGenerator';
 
 import config from '../config';
 
@@ -15,6 +16,19 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
   const [showEvaluatedOnly, setShowEvaluatedOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  const handleDownloadCertificate = (worker, req) => {
+    const slot = (data.schedules[req.courseId] || []).find(s => s.id === req.slotId);
+    const enrollment = slot?.enrolled?.find(e => e.id === worker.id);
+    
+    const workerName = worker.nombre_completo || worker.name || 'Desconocido';
+    const workerRut = worker.rut || worker.id;
+    const contractorName = worker.contractor || req.contractorName;
+    const inductionDate = slot ? slot.date : '';
+    const evaluationDate = enrollment?.evaluationDate || new Date().toLocaleDateString();
+
+    downloadCertificate(workerName, workerRut, contractorName, inductionDate, evaluationDate);
+  };
 
   const coursesMap = useMemo(() => {
     const map = {};
@@ -366,13 +380,24 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
                         </div>
 
                         {selectedRequest.status === 'approved' && (
-                          <div className={cn(
-                            "px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest",
-                            enrollment?.evaluation === 'passed' ? "bg-emerald-50 text-emerald-600" :
-                              enrollment?.evaluation === 'failed' ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-400"
-                          )}>
-                            {enrollment?.evaluation === 'passed' ? 'Aprobado' :
-                              enrollment?.evaluation === 'failed' ? 'Reprobado' : 'Pendiente'}
+                          <div className="flex items-center gap-2">
+                            <div className={cn(
+                              "px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest",
+                              enrollment?.evaluation === 'passed' ? "bg-emerald-50 text-emerald-600" :
+                                enrollment?.evaluation === 'failed' ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-400"
+                            )}>
+                              {enrollment?.evaluation === 'passed' ? 'Aprobado' :
+                                enrollment?.evaluation === 'failed' ? 'Reprobado' : 'Pendiente'}
+                            </div>
+                            {enrollment?.evaluation === 'passed' && (
+                              <button 
+                                onClick={() => handleDownloadCertificate(w, selectedRequest)}
+                                className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                title="Descargar Certificado"
+                              >
+                                <Download size={14} />
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>

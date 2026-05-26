@@ -4,6 +4,7 @@ import { Users, ClipboardList, LogOut, Zap, Search, Plus, CheckCircle, Calendar,
 import { AeroButton, cn } from './ui/AeroUI';
 import Dashboard from './Dashboard';
 import config from '../config';
+import { downloadCertificate } from '../utils/pdfGenerator';
 
 const API_BASE = config.API_BASE;
 
@@ -158,12 +159,16 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
   };
 
   const handleDownloadCertificate = (worker, req) => {
-    const link = document.createElement('a');
-    link.href = '/template-certificado.pdf';
-    link.download = `Certificado-${worker.nombre_completo || worker.name || 'Trabajador'}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const slot = (data.schedules[req.courseId] || []).find(s => s.id === req.slotId);
+    const enrollment = slot?.enrolled?.find(e => e.id === worker.id);
+    
+    const workerName = worker.nombre_completo || worker.name || 'Desconocido';
+    const workerRut = worker.rut || worker.id;
+    const contractorName = worker.contractor || req.contractorName || user.contractorName;
+    const inductionDate = slot ? slot.date : '';
+    const evaluationDate = enrollment?.evaluationDate || new Date().toLocaleDateString();
+
+    downloadCertificate(workerName, workerRut, contractorName, inductionDate, evaluationDate);
   };
 
   return (
@@ -558,8 +563,9 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
                     <div className="flex-1 bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-3 overflow-y-auto max-h-48">
                         {(selectedRequest.workerIds || []).map(w => {
                             const wid = typeof w === 'object' ? w.id : w;
-                            const worker = data?.workers?.find(wk => wk.id === wid);
-                            const wname = typeof w === 'object' ? w.name : (worker?.nombre_completo || worker?.name || 'Desconocido');
+                            const wname = typeof w === 'object' ? (w.nombre_completo || w.name) : 'Desconocido';
+                            const wrut = typeof w === 'object' ? w.rut : wid;
+                            const wcargo = typeof w === 'object' ? w.cargo : '';
                             const slot = (data?.schedules?.[selectedRequest.courseId] || []).find(s => s.id === selectedRequest.slotId);
                             const enrollment = slot?.enrolled?.find(e => e.id === wid);
 
@@ -574,7 +580,7 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
                                                 {wname}
                                             </div>
                                             <div className="text-[8px] font-bold text-slate-400">
-                                                ID: {wid} {worker?.rut ? `• RUT: ${worker.rut}` : ''} {worker?.cargo ? `• ${worker.cargo}` : ''}
+                                                ID: {wid} {wrut ? `• RUT: ${wrut}` : ''} {wcargo ? `• ${wcargo}` : ''}
                                             </div>
                                         </div>
                                     </div>
@@ -591,7 +597,7 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
                                             </div>
                                             {enrollment?.evaluation === 'passed' && (
                                                 <button 
-                                                    onClick={() => handleDownloadCertificate(worker, selectedRequest)}
+                                                    onClick={() => handleDownloadCertificate(w, selectedRequest)}
                                                     className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"
                                                     title="Descargar Certificado"
                                                 >

@@ -31,7 +31,8 @@ router.get('/', async (req, res) => {
         rut: e.workerRut,
         cargo: e.workerCargo,
         contractor: e.contractor,
-        evaluation: e.evaluation || 'pending'
+        evaluation: e.evaluation || 'pending',
+        evaluationDate: e.updatedAt ? new Date(e.updatedAt).toLocaleDateString() : ''
       }));
       delete slotJson.enrollments;
 
