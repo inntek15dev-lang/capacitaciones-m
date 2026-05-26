@@ -125,11 +125,13 @@ app.get('/api/v1/data', async (req, res) => {
 
       const slotJson = slot.toJSON();
       // Rename workers to enrolled for compatibility, and include evaluation
-      slotJson.enrolled = slotJson.workers.map(w => ({
+      const enrolledList = slotJson.workers || slotJson.Workers || [];
+      slotJson.enrolled = enrolledList.map(w => ({
         id: w.id,
-        evaluation: w.Enrollment.evaluation
+        evaluation: w.Enrollment?.evaluation || 'pending'
       }));
       delete slotJson.workers;
+      delete slotJson.Workers;
 
       schedules[slot.courseId].push(slotJson);
     });
