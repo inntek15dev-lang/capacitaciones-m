@@ -2,7 +2,7 @@ name: CI/CD CAPACITACIONES-M - Prod
 
 on:
   push:
-    branches: [ "prepro" ]
+    branches: [ "main" ]
 
 env:
   REGISTRY: ghcr.io
