@@ -26,7 +26,7 @@
 
 ## Infrastructure
 - **Connection**: Managed via `.env` variables and `database/db.js`.
-- **Environment**: Local MySQL instance `capacitaflow_db`.
+- **Environment**: Isolated Docker Compose projects (`capacitaciones-m-prepro` and `capacitaciones-m-prod`) to allow side-by-side deployment on the same host without configuration collision or container overrides.
 
 ## Data Synchronization
 - Initial data migrated from `database/initial.json` to MySQL (contains only the "Seguridad" category, empty workers, and empty schedules/requests).
