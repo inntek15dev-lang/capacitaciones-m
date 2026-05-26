@@ -7,6 +7,7 @@ const schedulesRouter = require('./schedules');
 const requestsRouter = require('./requests');
 const workersRouter = require('./workers');
 const dataRouter = require('./data');
+const certificatesRouter = require('./certificates');
 
 // Health Check
 router.get('/health', (req, res) => res.json({ status: 'ok', version: '2.0-proxy-priority' }));
@@ -18,5 +19,6 @@ router.use('/', schedulesRouter); // Handles /schedules, /enroll, /enrollments/e
 router.use('/requests', requestsRouter);
 router.use('/', workersRouter); // Handles /external/workers
 router.use('/data', dataRouter);
+router.use('/certificates', certificatesRouter);
 
 module.exports = router;

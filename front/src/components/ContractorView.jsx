@@ -159,16 +159,7 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
   };
 
   const handleDownloadCertificate = (worker, req) => {
-    const slot = (data.schedules[req.courseId] || []).find(s => s.id === req.slotId);
-    const enrollment = slot?.enrolled?.find(e => e.id === worker.id);
-    
-    const workerName = worker.nombre_completo || worker.name || 'Desconocido';
-    const workerRut = worker.rut || worker.id;
-    const contractorName = worker.contractor || req.contractorName || user.contractorName;
-    const inductionDate = slot ? slot.date : '';
-    const evaluationDate = enrollment?.evaluationDate || new Date().toLocaleDateString();
-
-    downloadCertificate(workerName, workerRut, contractorName, inductionDate, evaluationDate);
+    window.open(`${API_BASE}/certificates/${req.slotId}/${worker.id}/download`, '_blank');
   };
 
   return (

@@ -2,15 +2,17 @@ const express = require('express');
 const router = express.Router();
 const ScheduleSlot = require('../models/ScheduleSlot');
 const Enrollment = require('../models/Enrollment');
+const { sendEmail } = require('../utils/mailer');
 
 // Update schedules (Create/Update slot)
 router.post('/schedules', async (req, res) => {
   try {
-    const { courseId, slot } = req.body;
+    const { courseId, slot, adminEmail } = req.body;
 
     const newSlot = await ScheduleSlot.create({
       ...slot,
-      courseId
+      courseId,
+      adminEmail // Saved to DB
     });
 
     res.json({ success: true, slot: newSlot });
@@ -92,6 +94,34 @@ router.post('/enrollments/evaluation', async (req, res) => {
         { evaluation: item.status },
         { where: { slotId, workerId: item.workerId } }
       );
+    }
+
+    // SEND EMAIL ALERT TO CONTRACTORS
+    // We fetch Requests associated with this slot to get contractorEmails
+    const Request = require('../models/Request');
+    const relatedRequests = await Request.findAll({ where: { slotId } });
+    
+    // Group workers by contractor
+    const contractorMap = {};
+    for (const reqObj of relatedRequests) {
+      if (reqObj.contractorEmail) {
+        contractorMap[reqObj.contractorEmail] = true;
+      }
+    }
+
+    // Send email to each distinct contractor email
+    const emailsToNotify = process.env.NODE_ENV === 'preproduction' 
+      ? ['ipardo@inntek.cl'] 
+      : Object.keys(contractorMap);
+      
+    const subject = `Evaluación de Charla Completada`;
+    for (const cEmail of emailsToNotify) {
+      const htmlContent = `
+        <h3>Evaluación de Charla</h3>
+        <p>Se han evaluado los trabajadores de la Charla asociada al horario <b>${slotId}</b>.</p>
+        <p>Los certificados correspondientes ya se encuentran disponibles para su descarga en la plataforma.</p>
+      `;
+      await sendEmail(cEmail, subject, htmlContent);
     }
 
     res.json({ success: true });

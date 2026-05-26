@@ -3,6 +3,7 @@ const router = express.Router();
 const Request = require('../models/Request');
 const ScheduleSlot = require('../models/ScheduleSlot');
 const Enrollment = require('../models/Enrollment');
+const { sendEmail } = require('../utils/mailer');
 
 // Get requests
 router.get('/', async (req, res) => {
@@ -17,7 +18,7 @@ router.get('/', async (req, res) => {
 // Create request
 router.post('/', async (req, res) => {
   try {
-    const { slotId, courseId, contractorId, contractorName, workerIds } = req.body;
+    const { slotId, courseId, contractorId, contractorName, contractorEmail, workerIds } = req.body;
 
     const slot = await ScheduleSlot.findByPk(slotId, {
       include: [{ model: Enrollment, as: 'enrollments' }]
@@ -36,8 +37,24 @@ router.post('/', async (req, res) => {
       courseId,
       contractorId,
       contractorName,
+      contractorEmail, // Saved to DB
       workerIds
     });
+
+    // SEND EMAIL ALERT TO ADMIN
+    const emailTo = process.env.NODE_ENV === 'preproduction' ? 'psolis@inntek.cl' : slot.adminEmail;
+    if (emailTo) {
+      const subject = `Solicitud de Enrolamiento para Charla`;
+      const htmlContent = `
+        <h3>Nueva Solicitud de Enrolamiento</h3>
+        <p>Se ha generado una nueva solicitud de enrolamiento por parte del contratista <b>${contractorName}</b>.</p>
+        <p><b>Horario (Slot ID):</b> ${slotId}</p>
+        <p>Por favor revise y apruebe/rechace la solicitud en la plataforma.</p>
+      `;
+      await sendEmail(emailTo, subject, htmlContent);
+    } else {
+      console.warn(`No adminEmail found to send notification for slot ${slotId}`);
+    }
 
     res.json(newRequest);
   } catch (err) {
@@ -66,39 +83,66 @@ router.put('/:id', async (req, res) => {
 
       if (!slot) return res.status(404).json({ error: 'Slot associated with request not found' });
 
+      let workerArray = [];
+      if (typeof request.workerIds === 'string') {
+        try { workerArray = JSON.parse(request.workerIds); } catch(e) { workerArray = []; }
+      } else {
+        workerArray = request.workerIds || [];
+      }
+
       // Re-validate capacity
       const currentEnrolled = (slot.enrollments || []).length;
-      if (currentEnrolled + request.workerIds.length > slot.max) {
+      if (currentEnrolled + workerArray.length > slot.max) {
         return res.status(400).json({ error: 'Ya no hay cupos suficientes para aprobar esta solicitud' });
       }
 
-      // Auto-enroll workers directly by inserting into Enrollments
-      for (const w of (request.workerIds || [])) {
+      // Auto-enroll workers
+      for (const w of workerArray) {
         const wid = typeof w === 'object' ? w.id : w;
-        const wname = typeof w === 'object' ? w.name : 'Trabajador Externo';
+        const wname = typeof w === 'object' ? (w.name || 'Trabajador Externo') : 'Trabajador Externo';
         const wrut = typeof w === 'object' ? (w.rut || w.id) : w;
-        const wcargo = typeof w === 'object' ? w.cargo : null;
-        const wcontractor = typeof w === 'object' ? w.contractor : request.contractorName;
+        const wcargo = typeof w === 'object' ? (w.cargo || null) : null;
+        const wcontractor = typeof w === 'object' ? (w.contractor || request.contractorName) : request.contractorName;
 
-        await Enrollment.findOrCreate({
-          where: { slotId: request.slotId, workerId: wid },
-          defaults: {
-            slotId: request.slotId,
-            workerId: wid,
-            workerName: wname,
-            workerRut: wrut,
-            workerCargo: wcargo,
-            contractor: wcontractor,
-            evaluation: 'pending'
-          }
-        });
+        try {
+          await Enrollment.findOrCreate({
+            where: { slotId: request.slotId, workerId: String(wid) },
+            defaults: {
+              slotId: request.slotId,
+              workerId: String(wid),
+              workerName: String(wname),
+              workerRut: String(wrut),
+              workerCargo: wcargo ? String(wcargo) : null,
+              contractor: String(wcontractor),
+              evaluation: 'pending'
+            }
+          });
+        } catch (enrollErr) {
+          console.error("Error creating enrollment for worker:", wid, enrollErr);
+          throw enrollErr;
+        }
       }
     }
 
     await request.update({ status });
+    
+    // SEND EMAIL ALERT
+    const emailTo = process.env.NODE_ENV === 'preproduction' ? 'ipardo@inntek.cl' : request.contractorEmail;
+    if (emailTo) {
+      const statusText = status === 'approved' ? 'Aprobada' : 'Rechazada';
+      const subject = `Solicitud de Enrolamiento ${statusText}`;
+      const htmlContent = `
+        <h3>Solicitud de Enrolamiento ${statusText}</h3>
+        <p>Su solicitud para la charla en el horario <b>${request.slotId}</b> ha sido <b>${statusText}</b> por el administrador.</p>
+      `;
+      await sendEmail(emailTo, subject, htmlContent);
+    } else {
+      console.warn(`No contractorEmail found to send notification for request ${request.id}`);
+    }
+    
     res.json({ success: true, status });
   } catch (err) {
-    console.error(err);
+    console.error('Failed to update request status:', err);
     res.status(500).json({ error: 'Failed to update request' });
   }
 });

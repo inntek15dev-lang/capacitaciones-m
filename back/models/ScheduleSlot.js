@@ -21,6 +21,10 @@ const ScheduleSlot = sequelize.define('ScheduleSlot', {
     type: DataTypes.INTEGER,
     defaultValue: 0,
   },
+  adminEmail: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   courseId: {
     type: DataTypes.STRING,
     references: {
@@ -31,8 +35,5 @@ const ScheduleSlot = sequelize.define('ScheduleSlot', {
 }, {
   timestamps: true,
 });
-
-Course.hasMany(ScheduleSlot, { foreignKey: 'courseId' });
-ScheduleSlot.belongsTo(Course, { foreignKey: 'courseId' });
 
 module.exports = ScheduleSlot;

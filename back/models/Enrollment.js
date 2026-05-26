@@ -44,7 +44,4 @@ const Enrollment = sequelize.define('Enrollment', {
   timestamps: true,
 });
 
-ScheduleSlot.hasMany(Enrollment, { foreignKey: 'slotId', as: 'enrollments' });
-Enrollment.belongsTo(ScheduleSlot, { foreignKey: 'slotId' });
-
 module.exports = Enrollment;
