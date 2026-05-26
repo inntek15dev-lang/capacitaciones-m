@@ -4,7 +4,7 @@
 - **Backend**: Node.js/Express
 - **Database**: MySQL (Local)
 - **ORM**: Sequelize
-- **Frontend**: React/Vite (not modified in this mission)
+- **Frontend**: React/Vite (includes PDF certificate downloading using a static template-certificado.pdf located in the public directory)
 
 ## Domain Entities (Aggregates)
 

@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  db:
+  prepro-db:
     image: mysql:8.0
     container_name: {{CONTAINER_NAME_DB}}
     restart: always
@@ -17,7 +17,7 @@ services:
     networks:
       - {{NETWORK_NAME}}
 
-  api:
+  prepro-api:
     image: ghcr.io/{{REPO_NAME}}-api:latest
     container_name: {{CONTAINER_NAME_API}}
     restart: always
@@ -33,11 +33,11 @@ services:
     ports:
       - "127.0.0.1:{{PORT_API_EXT}}:{{PORT_API_INT}}"
     depends_on:
-      - db
+      - prepro-db
     networks:
       - {{NETWORK_NAME}}
 
-  frontend:
+  prepro-frontend:
     image: ghcr.io/{{REPO_NAME}}-front:latest
     container_name: {{CONTAINER_NAME_FRONT}}
     restart: always
