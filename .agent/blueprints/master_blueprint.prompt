@@ -1,7 +1,7 @@
 # CapacitaFlow - Master Blueprint
 
 ## Architecture Overview
-- **Backend**: Node.js/Express
+- **Backend**: Node.js/Express (with modular API endpoints grouped under `back/routes/`)
 - **Database**: MySQL (Local)
 - **ORM**: Sequelize
 - **Frontend**: React/Vite (includes PDF certificate downloading using a static template-certificado.pdf located in the public directory)
