@@ -29,5 +29,5 @@
 - **Environment**: Local MySQL instance `capacitaflow_db`.
 
 ## Data Synchronization
-- Initial data migrated from `initial.json` to MySQL.
+- Initial data migrated from `initial.json` to MySQL (contains only the "Seguridad" category, empty workers, and empty schedules/requests).
 - `db.json` is deprecated and should be removed after full verification.

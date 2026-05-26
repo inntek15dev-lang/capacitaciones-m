@@ -66,24 +66,24 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
   const myWorkers = plantWorkers;
 
   const courses = useMemo(() => {
-    const allCourses = data.categories.flatMap(c => c.courses);
+    const allCourses = (data?.categories || []).flatMap(c => c.courses || []);
     const userPlantIds = user.plantas?.map(p => p.niv_id) || [];
     // Only show courses that belong to one of the user's plants (by ID)
     return allCourses.filter(course => userPlantIds.includes(parseInt(course.niv_id, 10)));
-  }, [data.categories, user.plantas]);
+  }, [data?.categories, user.plantas]);
 
   const availableSlots = useMemo(() => {
     if (!requestForm.courseId) return [];
-    return data.schedules[requestForm.courseId] || [];
-  }, [data.schedules, requestForm.courseId]);
+    return data?.schedules?.[requestForm.courseId] || [];
+  }, [data?.schedules, requestForm.courseId]);
 
   const selectedSlotData = useMemo(() => {
     return availableSlots.find(s => s.id === requestForm.slotId);
   }, [availableSlots, requestForm.slotId]);
 
   const myRequests = useMemo(() => {
-    return (data.requests || []).filter(r => r.contractorId === user.id);
-  }, [data.requests, user.id]);
+    return (data?.requests || []).filter(r => r.contractorId === user.id);
+  }, [data?.requests, user.id]);
 
   // Paginated Data
   const paginatedWorkers = useMemo(() => {
@@ -98,13 +98,13 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
   const filteredRequests = useMemo(() => {
     return myRequests.filter(r => {
       if (showEvaluatedOnly) {
-        const slot = (data.schedules[r.courseId] || []).find(s => s.id === r.slotId);
+        const slot = (data?.schedules?.[r.courseId] || []).find(s => s.id === r.slotId);
         const isEval = r.status === 'approved' && slot?.enrolled.filter(e => r.workerIds.includes(e.id)).every(e => e.evaluation !== 'pending');
         if (!isEval) return false;
       }
       return true;
     });
-  }, [myRequests, showEvaluatedOnly, data.schedules]);
+  }, [myRequests, showEvaluatedOnly, data?.schedules]);
 
   const paginatedRequests = useMemo(() => {
     const start = (requestsPage - 1) * requestsLimit;
