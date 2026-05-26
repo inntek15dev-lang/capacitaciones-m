@@ -2,6 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const sequelize = require('./database/db');
+
+// Load all models to establish associations
+require('./models/Category');
+require('./models/Course');
+require('./models/Worker');
+require('./models/ScheduleSlot');
+require('./models/Enrollment');
+require('./models/User');
+require('./models/Request');
+
 const router = require('./routes');
 
 const app = express();
