@@ -74,7 +74,7 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "docker-compose-preprod.yml"
+          source: "docker-compose-prepro.yml"
           target: "/home/DOCKERS-PREPROD/CAPACITACIONES-M/"
           overwrite: true
 
@@ -91,8 +91,8 @@ jobs:
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             # Actualizar imágenes y reiniciar contenedores de forma forzada
-            docker compose pull
-            docker compose up -d --force-recreate
+            docker compose -f docker-compose-prepro.yml pull
+            docker compose -f docker-compose-prepro.yml up -d --force-recreate
             
             # --- Automatización de Base de Datos ---
             echo "Esperando 15 segundos a que los servicios estabilicen..."
@@ -100,7 +100,7 @@ jobs:
             
             # Asegurar consistencia del esquema (Añadir columnas faltantes)
             echo "Verificando consistencia del esquema..."
-            docker exec capacitaciones-m-api node scripts/ensure_schema.js || echo "Skip ensure_schema"
+            docker exec prepro-capacitaciones-m-api node scripts/ensure_schema.js || echo "Skip ensure_schema"
             
             # Poblar base de datos (Opcional)
             # echo "Poblando base de datos..."
