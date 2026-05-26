@@ -4,81 +4,90 @@ const Course = require('./models/Course');
 const User = require('./models/User');
 const Worker = require('./models/Worker');
 const ScheduleSlot = require('./models/ScheduleSlot');
+const Enrollment = require('./models/Enrollment');
+const initialData = require('./data/initial.json');
+const mysql = require('mysql2/promise');
 
 const seed = async () => {
     try {
-        console.log('Iniciando el proceso de seeding...');
-        console.log('Verificando/Creando categorías...');
-        const categoriesData = [
-            { id: 'cat-seg', name: 'SEGURIDAD' },
-            { id: 'cat-cal', name: 'Calidad' },
-            { id: 'cat-amb', name: 'Medio Ambiente' },
-            { id: 'cat-ops', name: 'Operaciones' },
-        ];
+        console.log('Iniciando el proceso de seeding desde initial.json...');
+        
+        // 1. Asegurar la creación de la base de datos
+        const dbName = process.env.DB_NAME || 'capacitaflow_db';
+        const connection = await mysql.createConnection({
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_ROOT_PASSWORD || '',
+        });
+        await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
+        await connection.end();
 
-        for (const cat of categoriesData) {
-            const [category, created] = await Category.findOrCreate({ where: { id: cat.id }, defaults: cat });
-            if (created) {
-                console.log(`Categoría '${category.name}' creada.`);
+        // Sincronizar el esquema
+        await sequelize.sync({ alter: true });
+
+        // 2. Poblar Categorías y Cursos
+        console.log('Poblando categorías y cursos...');
+        for (const cat of initialData.categories) {
+            const [category] = await Category.findOrCreate({ 
+                where: { id: cat.id }, 
+                defaults: { id: cat.id, label: cat.label } 
+            });
+            
+            for (const course of cat.courses) {
+                await Course.findOrCreate({
+                    where: { id: course.id },
+                    defaults: {
+                        id: course.id,
+                        name: course.name,
+                        maxPerSlot: course.maxPerSlot,
+                        categoryId: category.id
+                    }
+                });
             }
         }
-        console.log('Categorías verificadas.');
 
-        console.log('Verificando/Creando cursos de ejemplo...');
-        const coursesData = [
-            { id: 'c-seg-01', name: 'Uso correcto de EPP', categoryId: 'cat-seg', maxPerSlot: 20 },
-            { id: 'c-seg-02', name: 'Prevención de riesgos eléctricos', categoryId: 'cat-seg', maxPerSlot: 15 },
-            { id: 'c-seg-03', name: 'Trabajo seguro en alturas', categoryId: 'cat-seg', maxPerSlot: 10, niv_id: 4068283, plantaNombre: 'Planta Principal' },
-            { id: 'c-cal-01', name: 'Introducción a ISO 9001', categoryId: 'cat-cal', maxPerSlot: 25 },
-            { id: 'c-amb-01', name: 'Manejo de residuos peligrosos', categoryId: 'cat-amb', maxPerSlot: 15 },
-        ];
-        for (const course of coursesData) {
-            const [, created] = await Course.findOrCreate({ where: { id: course.id }, defaults: course });
-            if (created) console.log(`Curso '${course.name}' creado.`);
+        // 3. Poblar Trabajadores
+        console.log('Poblando trabajadores...');
+        for (const worker of initialData.workers) {
+            await Worker.findOrCreate({
+                where: { id: worker.id },
+                defaults: worker
+            });
         }
-        console.log('Cursos verificados.');
 
-        console.log('Verificando/Creando usuarios de prueba...');
-        const usersData = [
-            { id: 'user-admin', username: 'admin', password: 'admin_password', role: 'admin', name: 'Administrador' },
-            { id: 'user-contratista', username: 'contratista', password: 'contra_password', role: 'contractor', name: 'Contratista Ejemplo' },
-        ];
-        for (const user of usersData) {
-            const [, created] = await User.findOrCreate({ where: { id: user.id }, defaults: user });
-            if (created) console.log(`Usuario '${user.username}' creado.`);
+        // 4. Poblar Usuarios
+        console.log('Poblando usuarios...');
+        for (const user of initialData.users) {
+            await User.findOrCreate({
+                where: { id: user.id },
+                defaults: user
+            });
         }
-        console.log('Usuarios verificados.');
 
-        console.log('Verificando/Creando trabajadores de prueba...');
-        const workersData = [
-            { id: 'worker-001', name: 'Juan Pérez', company: 'Constructora XYZ' },
-            { id: 'worker-002', name: 'Ana Gómez', company: 'Constructora XYZ' },
-            { id: 'worker-003', name: 'Luis Martínez', company: 'Servicios Industriales ABC' },
-        ];
-        for (const worker of workersData) {
-            const [, created] = await Worker.findOrCreate({ where: { id: worker.id }, defaults: worker });
-            if (created) console.log(`Trabajador '${worker.name}' creado.`);
+        // 5. Poblar Horarios (ScheduleSlots)
+        console.log('Poblando horarios...');
+        for (const [courseId, slots] of Object.entries(initialData.schedules)) {
+            for (const slot of slots) {
+                const [dbSlot] = await ScheduleSlot.findOrCreate({
+                    where: { id: slot.id },
+                    defaults: {
+                        id: slot.id,
+                        courseId: courseId,
+                        date: slot.date,
+                        start: slot.start,
+                        end: slot.end,
+                        max: slot.max,
+                    }
+                });
+
+                // Si tiene enrolados iniciales, asociarlos
+                if (slot.enrolled && slot.enrolled.length > 0) {
+                    await dbSlot.addWorkers(slot.enrolled);
+                }
+            }
         }
-        console.log('Trabajadores verificados.');
 
-        console.log('Verificando/Creando horarios de ejemplo...');
-        const slotsData = [
-            { id: 'slot-001', courseId: 'c-seg-01', date: '2026-06-15', time: '09:00', max: 20, location: 'Sala 1' },
-            { id: 'slot-002', courseId: 'c-seg-01', date: '2026-06-16', time: '14:00', max: 20, location: 'Sala 2' },
-            { id: 'slot-003', courseId: 'c-cal-01', date: '2026-06-15', time: '11:00', max: 25, location: 'Auditorio' },
-        ];
-        for (const slot of slotsData) {
-            const [, created] = await ScheduleSlot.findOrCreate({ where: { id: slot.id }, defaults: slot });
-            if (created) console.log(`Horario para curso '${slot.courseId}' en fecha '${slot.date}' creado.`);
-        }
-        console.log('Horarios verificados.');
-
-        console.log('\n--- Proceso de Seeding completado ---');
-        console.log('La base de datos ha sido inicializada con datos de prueba.');
-        console.log('\nCredenciales de prueba:');
-        console.log('  - Administrador: admin / admin_password');
-        console.log('  - Contratista:   contratista / contra_password');
-        console.log('-------------------------------------\n');
+        console.log('La base de datos ha sido inicializada exitosamente.');
 
     } catch (error) {
         console.error('Error durante el proceso de seeding:', error);

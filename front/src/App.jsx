@@ -114,18 +114,18 @@ export default function App() {
   };
 
   // Logic Helpers
-  const courses = data.categories.flatMap(c => c.courses);
+  const courses = (data?.categories || []).flatMap(c => c.courses || []);
   const currentCourse = courses.find(c => c.id === selectedCourseId);
-  const currentSchedules = data.schedules[selectedCourseId] || [];
+  const currentSchedules = data?.schedules?.[selectedCourseId] || [];
   
   const filteredWorkers = useMemo(() => {
     const q = searchQuery.toLowerCase();
-    return data.workers.filter(w => 
+    return (data?.workers || []).filter(w => 
       w.name.toLowerCase().includes(q) || 
       w.rut.includes(q) || 
       w.contractor.toLowerCase().includes(q)
     );
-  }, [data.workers, searchQuery]);
+  }, [data?.workers, searchQuery]);
 
   // Map of workerId -> schedule that they are enrolled in for the current course
   const enrollmentMap = useMemo(() => {

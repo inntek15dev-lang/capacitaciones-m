@@ -13,8 +13,8 @@ import { cn } from './ui/AeroUI';
 
 export default function Dashboard({ data, filterContractor }) {
   const stats = useMemo(() => {
-    const allSlots = Object.values(data.schedules).flat();
-    const allRequests = data.requests || [];
+    const allSlots = Object.values(data?.schedules || {}).flat();
+    const allRequests = data?.requests || [];
     
     // 1. Filter data based on contractor if provided
     const filteredRequests = filterContractor 
@@ -22,8 +22,8 @@ export default function Dashboard({ data, filterContractor }) {
       : allRequests;
 
     const filteredWorkers = filterContractor
-      ? data.workers.filter(w => w.contractor === filterContractor)
-      : data.workers;
+      ? (data?.workers || []).filter(w => w.contractor === filterContractor)
+      : (data?.workers || []);
 
     const workerIdsOfContractor = new Set(filteredWorkers.map(w => w.id));
 
