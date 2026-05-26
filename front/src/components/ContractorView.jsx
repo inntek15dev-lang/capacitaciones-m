@@ -121,7 +121,9 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
         const worker = myWorkers.find(w => w.id === id);
         return {
           id: id,
-          name: worker ? (worker.nombre_completo || worker.name) : 'Desconocido'
+          name: worker ? (worker.nombre_completo || worker.name) : 'Desconocido',
+          rut: worker ? (worker.rut || id) : id,
+          contractor: user.contractorName
         };
       });
 

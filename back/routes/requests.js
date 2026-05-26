@@ -74,7 +74,24 @@ router.put('/:id', async (req, res) => {
       }
 
       // Auto-enroll workers (extracting IDs if stored as objects)
-      const ids = (request.workerIds || []).map(w => typeof w === 'object' ? w.id : w);
+      const ids = [];
+      for (const w of (request.workerIds || [])) {
+        const wid = typeof w === 'object' ? w.id : w;
+        const wname = typeof w === 'object' ? w.name : 'Trabajador Externo';
+        const wrut = typeof w === 'object' ? (w.rut || w.id) : w;
+        const wcontractor = typeof w === 'object' ? w.contractor : null;
+
+        await Worker.findOrCreate({
+          where: { id: wid },
+          defaults: {
+            id: wid,
+            name: wname,
+            rut: wrut,
+            contractor: wcontractor
+          }
+        });
+        ids.push(wid);
+      }
       await slot.addWorkers(ids);
     }
 
