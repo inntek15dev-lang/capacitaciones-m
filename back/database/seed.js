@@ -1,11 +1,11 @@
-const sequelize = require('./database/db');
-const Category = require('./models/Category');
-const Course = require('./models/Course');
-const User = require('./models/User');
-const Worker = require('./models/Worker');
-const ScheduleSlot = require('./models/ScheduleSlot');
-const Enrollment = require('./models/Enrollment');
-const initialData = require('./data/initial.json');
+const sequelize = require('./db');
+const Category = require('../models/Category');
+const Course = require('../models/Course');
+const User = require('../models/User');
+const Worker = require('../models/Worker');
+const ScheduleSlot = require('../models/ScheduleSlot');
+const Enrollment = require('../models/Enrollment');
+const initialData = require('./initial.json');
 const mysql = require('mysql2/promise');
 
 const seed = async () => {
