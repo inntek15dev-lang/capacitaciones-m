@@ -11,7 +11,7 @@ services:
     env_file:
       - .env
     ports:
-      - "127.0.0.1:3350:3306"
+      - "127.0.0.1:3351:3306"
     volumes:
       - ./mysql_data:/var/lib/mysql
     networks:
@@ -31,7 +31,7 @@ services:
     env_file:
       - .env
     ports:
-      - "127.0.0.1:4050:4050"
+      - "127.0.0.1:4051:4050"
     depends_on:
       - db
     networks:
@@ -44,7 +44,7 @@ services:
     environment:
       - VITE_API_URL=https://prepro-capacitaciones-m-api.ovalcontrol.com/api/v1
     ports:
-      - "127.0.0.1:8050:80"
+      - "127.0.0.1:8051:80"
     depends_on:
       - api
     networks:
