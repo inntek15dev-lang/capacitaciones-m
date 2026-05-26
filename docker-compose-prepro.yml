@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  db:
+  prepro-db:
     image: mysql:8.0
     container_name: prepro-capacitaciones-m-db
     restart: always
@@ -17,7 +17,7 @@ services:
     networks:
       - prepro-capacitaciones-m
 
-  api:
+  prepro-api:
     image: ghcr.io/inntek15dev-lang/capacitaciones-m-api:latest
     container_name: prepro-capacitaciones-m-api
     restart: always
@@ -33,11 +33,11 @@ services:
     ports:
       - "127.0.0.1:4050:4050"
     depends_on:
-      - db
+      - prepro-db
     networks:
       - prepro-capacitaciones-m
 
-  frontend:
+  prepro-frontend:
     image: ghcr.io/inntek15dev-lang/capacitaciones-m-front:latest
     container_name: prepro-capacitaciones-m-front
     restart: always
