@@ -99,8 +99,8 @@ jobs:
             echo "Esperando 15 segundos a que la app inicie y sincronice la base de datos..."
             sleep 15
             
-            echo "Poblando base de datos con seed.js..."
-            docker exec prepro-capacitaciones-m-api node seed.js || echo "Skip seed"
+            echo "Poblando base de datos con database/seed.js..."
+            docker exec prepro-capacitaciones-m-api node database/seed.js || echo "Skip seed"
             
             # Limpieza de imágenes antiguas para optimizar espacio
             docker image prune -f
