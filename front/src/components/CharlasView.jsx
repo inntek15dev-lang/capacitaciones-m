@@ -3,7 +3,9 @@ import axios from 'axios';
 import { Plus, Edit2, Trash2, X, AlertCircle } from 'lucide-react';
 import { AeroButton, cn } from './ui/AeroUI';
 
-const API_BASE = 'https://prepro-capacitaciones-m-api.ovalcontrol.com/api/v1';
+import config from '../config';
+
+const API_BASE = config.API_BASE;
 
 export default function CharlasView({ categories, user, onRefresh }) {
   const [isModalOpen, setIsModalOpen] = useState(false);

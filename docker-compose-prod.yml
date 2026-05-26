@@ -42,7 +42,7 @@ services:
     container_name: capacitaciones-m-front
     restart: always
     environment:
-      - VITE_API_URL=https://prepro-capacitaciones-m-api.ovalcontrol.com/api/v1
+      - VITE_API_URL=https://capacitaciones-m-api.ovalcontrol.com/api/v1
     ports:
       - "127.0.0.1:8051:80"
     depends_on:

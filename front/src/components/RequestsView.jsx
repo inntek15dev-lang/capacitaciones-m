@@ -3,7 +3,9 @@ import axios from 'axios';
 import { ClipboardList, Users, CheckCircle2, XCircle, Eye, Calendar, Clock, ChevronRight, GraduationCap, ArrowRight, Plus, Monitor, MapPin } from 'lucide-react';
 import { AeroButton, cn } from './ui/AeroUI';
 
-const API_BASE = 'https://prepro-capacitaciones-m-api.ovalcontrol.com/api/v1';
+import config from '../config';
+
+const API_BASE = config.API_BASE;
 
 export default function RequestsView({ requests, data, onRefresh, showToast }) {
   const [selectedRequest, setSelectedRequest] = useState(null);
