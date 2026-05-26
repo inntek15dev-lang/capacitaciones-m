@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Request = require('../models/Request');
 const ScheduleSlot = require('../models/ScheduleSlot');
-const Worker = require('../models/Worker');
+const Enrollment = require('../models/Enrollment');
 
 // Get requests
 router.get('/', async (req, res) => {
@@ -19,13 +19,12 @@ router.post('/', async (req, res) => {
   try {
     const { slotId, courseId, contractorId, contractorName, workerIds } = req.body;
 
-    // Optional: Validate capacity here too
     const slot = await ScheduleSlot.findByPk(slotId, {
-      include: [{ model: Worker, as: 'workers', through: { attributes: [] } }]
+      include: [{ model: Enrollment, as: 'enrollments' }]
     });
 
     if (!slot) return res.status(404).json({ error: 'Slot not found' });
-    const currentEnrolled = (slot.workers || slot.Workers || []).length;
+    const currentEnrolled = (slot.enrollments || []).length;
     if (currentEnrolled + workerIds.length > slot.max) {
       return res.status(400).json({ error: 'No hay cupos suficientes para esta solicitud' });
     }
@@ -62,37 +61,38 @@ router.put('/:id', async (req, res) => {
 
     if (status === 'approved') {
       const slot = await ScheduleSlot.findByPk(request.slotId, {
-        include: [{ model: Worker, as: 'workers', through: { attributes: [] } }]
+        include: [{ model: Enrollment, as: 'enrollments' }]
       });
 
       if (!slot) return res.status(404).json({ error: 'Slot associated with request not found' });
 
       // Re-validate capacity
-      const currentEnrolled = (slot.workers || slot.Workers || []).length;
+      const currentEnrolled = (slot.enrollments || []).length;
       if (currentEnrolled + request.workerIds.length > slot.max) {
         return res.status(400).json({ error: 'Ya no hay cupos suficientes para aprobar esta solicitud' });
       }
 
-      // Auto-enroll workers (extracting IDs if stored as objects)
-      const ids = [];
+      // Auto-enroll workers directly by inserting into Enrollments
       for (const w of (request.workerIds || [])) {
         const wid = typeof w === 'object' ? w.id : w;
         const wname = typeof w === 'object' ? w.name : 'Trabajador Externo';
         const wrut = typeof w === 'object' ? (w.rut || w.id) : w;
-        const wcontractor = typeof w === 'object' ? w.contractor : null;
+        const wcargo = typeof w === 'object' ? w.cargo : null;
+        const wcontractor = typeof w === 'object' ? w.contractor : request.contractorName;
 
-        await Worker.findOrCreate({
-          where: { id: wid },
+        await Enrollment.findOrCreate({
+          where: { slotId: request.slotId, workerId: wid },
           defaults: {
-            id: wid,
-            name: wname,
-            rut: wrut,
-            contractor: wcontractor
+            slotId: request.slotId,
+            workerId: wid,
+            workerName: wname,
+            workerRut: wrut,
+            workerCargo: wcargo,
+            contractor: wcontractor,
+            evaluation: 'pending'
           }
         });
-        ids.push(wid);
       }
-      await slot.addWorkers(ids);
     }
 
     await request.update({ status });

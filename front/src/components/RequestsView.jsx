@@ -347,10 +347,11 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
                 <div className="flex-1 bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-3 overflow-y-auto max-h-48">
                   {(selectedRequest.workerIds || []).map(w => {
                     const wid = typeof w === 'object' ? w.id : w;
-                    const worker = data.workers.find(wk => wk.id === wid);
-                    const wname = typeof w === 'object' ? w.name : (worker?.name || 'Desconocido');
-                    const slot = (data.schedules[selectedRequest.courseId] || []).find(s => s.id === selectedRequest.slotId);
-                    const enrollment = slot?.enrolled.find(e => e.id === wid);
+                    const wname = typeof w === 'object' ? (w.nombre_completo || w.name) : 'Desconocido';
+                    const wrut = typeof w === 'object' ? w.rut : '';
+                    const wcargo = typeof w === 'object' ? w.cargo : '';
+                    const slot = (data?.schedules?.[selectedRequest.courseId] || []).find(s => s.id === selectedRequest.slotId);
+                    const enrollment = slot?.enrolled?.find(e => e.id === wid);
 
                     return (
                       <div key={wid} className="flex items-center justify-between gap-3">
@@ -360,7 +361,7 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
                           </div>
                           <div className="truncate">
                             <div className="text-[10px] font-black text-slate-800 truncate">{wname}</div>
-                            <div className="text-[8px] font-bold text-slate-400">ID: {wid} {worker?.rut ? `• RUT: ${worker.rut}` : ''}</div>
+                            <div className="text-[8px] font-bold text-slate-400">ID: {wid} {wrut ? `• RUT: ${wrut}` : ''} {wcargo ? `• ${wcargo}` : ''}</div>
                           </div>
                         </div>
 
@@ -436,7 +437,13 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
             <div className="p-10 max-h-[60vh] overflow-y-auto">
               <div className="grid grid-cols-1 gap-4">
                 {evaluationData.map(item => {
-                  const worker = data.workers.find(w => w.id === item.workerId);
+                  const reqWorker = (selectedRequest.workerIds || []).find(w => w.id === item.workerId);
+                  const slot = (data?.schedules?.[selectedRequest.courseId] || []).find(s => s.id === selectedRequest.slotId);
+                  const enrolledWorker = slot?.enrolled?.find(e => e.id === item.workerId);
+
+                  const wname = reqWorker?.name || enrolledWorker?.name || 'Trabajador';
+                  const wrut = reqWorker?.rut || enrolledWorker?.rut || item.workerId;
+
                   return (
                     <div key={item.workerId} className="flex items-center justify-between p-6 bg-slate-50 rounded-[32px] border border-slate-100">
                       <div className="flex items-center gap-4">
@@ -444,8 +451,8 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
                           <Users size={24} />
                         </div>
                         <div>
-                          <div className="font-bold text-slate-800">{worker?.name}</div>
-                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{worker?.rut}</div>
+                          <div className="font-bold text-slate-800">{wname}</div>
+                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{wrut}</div>
                         </div>
                       </div>
 

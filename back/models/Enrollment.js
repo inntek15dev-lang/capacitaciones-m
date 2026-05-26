@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database/db');
-const Worker = require('./Worker');
 const ScheduleSlot = require('./ScheduleSlot');
 
 const Enrollment = sequelize.define('Enrollment', {
@@ -8,6 +7,34 @@ const Enrollment = sequelize.define('Enrollment', {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
+  },
+  slotId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    references: {
+      model: ScheduleSlot,
+      key: 'id',
+    },
+  },
+  workerId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  workerName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  workerRut: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  workerCargo: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  contractor: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   evaluation: {
     type: DataTypes.ENUM('pending', 'passed', 'failed'),
@@ -17,8 +44,7 @@ const Enrollment = sequelize.define('Enrollment', {
   timestamps: true,
 });
 
-// Relationships
-Worker.belongsToMany(ScheduleSlot, { through: Enrollment, foreignKey: 'workerId', as: 'slots' });
-ScheduleSlot.belongsToMany(Worker, { through: Enrollment, foreignKey: 'slotId', as: 'workers' });
+ScheduleSlot.hasMany(Enrollment, { foreignKey: 'slotId', as: 'enrollments' });
+Enrollment.belongsTo(ScheduleSlot, { foreignKey: 'slotId' });
 
 module.exports = Enrollment;

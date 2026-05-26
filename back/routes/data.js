@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Category = require('../models/Category');
 const Course = require('../models/Course');
-const Worker = require('../models/Worker');
 const ScheduleSlot = require('../models/ScheduleSlot');
+const Enrollment = require('../models/Enrollment');
 const User = require('../models/User');
 const Request = require('../models/Request');
 
@@ -14,14 +14,8 @@ router.get('/', async (req, res) => {
       include: [{ model: Course, as: 'courses' }]
     });
 
-    const workers = await Worker.findAll();
-
     const slots = await ScheduleSlot.findAll({
-      include: [{
-        model: Worker,
-        as: 'workers',
-        through: { attributes: ['evaluation'] }
-      }]
+      include: [{ model: Enrollment, as: 'enrollments' }]
     });
 
     // Map schedules back to the course-indexed format expected by frontend
@@ -30,14 +24,16 @@ router.get('/', async (req, res) => {
       if (!schedules[slot.courseId]) schedules[slot.courseId] = [];
 
       const slotJson = slot.toJSON();
-      // Rename workers to enrolled for compatibility, and include evaluation
-      const enrolledList = slotJson.workers || slotJson.Workers || [];
-      slotJson.enrolled = enrolledList.map(w => ({
-        id: w.id,
-        evaluation: w.Enrollment?.evaluation || 'pending'
+      const enrollments = slotJson.enrollments || [];
+      slotJson.enrolled = enrollments.map(e => ({
+        id: e.workerId,
+        name: e.workerName,
+        rut: e.workerRut,
+        cargo: e.workerCargo,
+        contractor: e.contractor,
+        evaluation: e.evaluation || 'pending'
       }));
-      delete slotJson.workers;
-      delete slotJson.Workers;
+      delete slotJson.enrollments;
 
       schedules[slot.courseId].push(slotJson);
     });
@@ -47,7 +43,7 @@ router.get('/', async (req, res) => {
 
     res.json({
       categories,
-      workers,
+      workers: [], // Empty array since workers are read from external source
       schedules,
       users,
       requests
