@@ -4,7 +4,8 @@
 - **Backend**: Node.js/Express (with modular API endpoints grouped under `back/routes/`)
 - **Database**: MySQL (Local)
 - **ORM**: Sequelize
-- **Frontend**: React/Vite (includes PDF certificate downloading using a static template-certificado.pdf located in the public directory)
+- **Frontend**: React/Vite (includes PDF certificate downloading)
+- **Backend Assets**: A static `template-certificado.pdf` is located in `back/assets/`. The dynamic data injection functionality is currently on stand-by, and the system downloads the clean, unmodified original template directly.
 
 ## Domain Entities (Aggregates)
 

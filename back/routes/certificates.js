@@ -27,11 +27,13 @@ router.get('/:slotId/:workerId/download', async (req, res) => {
       return res.status(400).json({ error: 'El trabajador no tiene la charla aprobada' });
     }
 
-    const templatePath = path.join(__dirname, '../../front/public/template-certificado.pdf');
+    const templatePath = path.join(__dirname, '../assets/template-certificado.pdf');
     if (!fs.existsSync(templatePath)) {
       return res.status(500).json({ error: 'Template PDF not found' });
     }
 
+    // --- FUNCIONALIDAD EN STAND BY (INYECCIÓN DE DATOS) ---
+    /*
     const existingPdfBytes = fs.readFileSync(templatePath);
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -62,6 +64,11 @@ router.get('/:slotId/:workerId/download', async (req, res) => {
     firstPage.drawText(`${eDay} / ${eMonth} / ${eYear}`, { x: 150, y: 380, size: 12, font, color: rgb(0, 0, 0) });
 
     const pdfBytes = await pdfDoc.save();
+    */
+    // ------------------------------------------------------
+
+    // Descarga directa del template original
+    const pdfBytes = fs.readFileSync(templatePath);
 
     res.setHeader('Content-Disposition', `attachment; filename=Certificado_${enrollment.workerRut}.pdf`);
     res.setHeader('Content-Type', 'application/pdf');
