@@ -31,6 +31,11 @@ export default function App() {
     }
 
     if (encodedData) {
+      // Forzar cierre de cualquier sesión previa antes de iniciar la nueva
+      if (localStorage.getItem('capacitaUser')) {
+        console.warn("[SSO] Se detectó ingreso externo. Forzando el cierre de la sesión previa.");
+        localStorage.removeItem('capacitaUser');
+      }
       try {
         // New Secure Decryption (AES-256-CBC + GZInflate)
         const userData = decryptDataString(encodedData);

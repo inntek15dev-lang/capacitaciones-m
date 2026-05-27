@@ -20,6 +20,7 @@
 
 ### SecurityContext
 - **User**: Auth entities with roles (SuperAdmin, Contratista).
+- **Session Management**: External login links (SSO/bypass) force-close any active previous session before initiating the new user session.
 
 ### LogisticsContext
 - **Request**: Pending/approved/rejected solicitudes for new slots or registrations (supports deletion by administrators).
