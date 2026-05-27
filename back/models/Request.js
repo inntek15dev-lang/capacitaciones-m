@@ -29,6 +29,10 @@ const Request = sequelize.define('Request', {
   contractorName: {
     type: DataTypes.STRING,
   },
+  contractorEmail: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   workerIds: {
     type: DataTypes.JSON, // Array of string IDs
     allowNull: false,

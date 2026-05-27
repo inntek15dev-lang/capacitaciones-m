@@ -1,10 +1,4 @@
-const sequelize = require('./db');
-const Category = require('../models/Category');
-const Course = require('../models/Course');
-const User = require('../models/User');
-const Worker = require('../models/Worker');
-const ScheduleSlot = require('../models/ScheduleSlot');
-const Enrollment = require('../models/Enrollment');
+const { sequelize, Category, Course, User, ScheduleSlot, Enrollment, Request } = require('../models');
 const initialData = require('./initial.json');
 const mysql = require('mysql2/promise');
 
@@ -19,10 +13,11 @@ const seed = async () => {
             user: process.env.DB_USER || 'root',
             password: process.env.DB_ROOT_PASSWORD || '',
         });
+        // Ensure database exists without dropping it
         await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
         await connection.end();
 
-        // Sincronizar el esquema
+        // Sincronizar el esquema de forma segura sin borrar datos
         await sequelize.sync({ alter: true });
 
         // 2. Poblar Categorías y Cursos
@@ -46,16 +41,7 @@ const seed = async () => {
             }
         }
 
-        // 3. Poblar Trabajadores
-        console.log('Poblando trabajadores...');
-        for (const worker of initialData.workers) {
-            await Worker.findOrCreate({
-                where: { id: worker.id },
-                defaults: worker
-            });
-        }
-
-        // 4. Poblar Usuarios
+        // 3. Poblar Usuarios
         console.log('Poblando usuarios...');
         for (const user of initialData.users) {
             await User.findOrCreate({
@@ -64,7 +50,7 @@ const seed = async () => {
             });
         }
 
-        // 5. Poblar Horarios (ScheduleSlots)
+        // 4. Poblar Horarios (ScheduleSlots) y sus enrolados
         console.log('Poblando horarios...');
         for (const [courseId, slots] of Object.entries(initialData.schedules)) {
             for (const slot of slots) {
@@ -82,7 +68,18 @@ const seed = async () => {
 
                 // Si tiene enrolados iniciales, asociarlos
                 if (slot.enrolled && slot.enrolled.length > 0) {
-                    await dbSlot.addWorkers(slot.enrolled);
+                    for (const wid of slot.enrolled) {
+                        await Enrollment.findOrCreate({
+                            where: { slotId: slot.id, workerId: wid },
+                            defaults: {
+                                slotId: slot.id,
+                                workerId: wid,
+                                workerName: `Trabajador ${wid}`,
+                                workerRut: wid,
+                                evaluation: 'pending'
+                            }
+                        });
+                    }
                 }
             }
         }

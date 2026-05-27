@@ -57,7 +57,8 @@ export default function Dashboard({ data, filterContractor }) {
         if (r.status !== 'approved') return false;
         const slot = allSlots.find(s => s.id === r.slotId);
         if (!slot) return false;
-        const requestEnrolled = slot.enrolled.filter(e => r.workerIds.includes(e.id));
+        const reqIds = (r.workerIds || []).map(w => typeof w === 'object' ? w.id : w);
+        const requestEnrolled = slot.enrolled.filter(e => reqIds.includes(e.id));
         return requestEnrolled.length > 0 && requestEnrolled.every(e => e.evaluation !== 'pending');
     }).length;
 

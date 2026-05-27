@@ -92,6 +92,7 @@ jobs:
             
             # Actualizar imágenes y reiniciar contenedores de forma forzada
             docker compose -f docker-compose-prepro.yml pull
+            docker rm -f prepro-capacitaciones-m-db prepro-capacitaciones-m-api prepro-capacitaciones-m-front || true
             docker compose -f docker-compose-prepro.yml up -d --force-recreate
             
             # --- Automatización de Base de Datos ---

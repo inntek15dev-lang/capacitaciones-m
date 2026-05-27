@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import axios from 'axios';
-import { ClipboardList, Users, CheckCircle2, XCircle, Eye, Calendar, Clock, ChevronRight, GraduationCap, ArrowRight, Plus, Monitor, MapPin } from 'lucide-react';
+import { ClipboardList, Users, CheckCircle2, XCircle, Eye, Calendar, Clock, ChevronRight, GraduationCap, ArrowRight, Plus, Monitor, MapPin, Trash2, Download } from 'lucide-react';
 import { AeroButton, cn } from './ui/AeroUI';
+import { downloadCertificate } from '../utils/pdfGenerator';
 
 import config from '../config';
 
@@ -15,6 +16,10 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
   const [showEvaluatedOnly, setShowEvaluatedOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  const handleDownloadCertificate = (worker, req) => {
+    window.open(`${API_BASE}/certificates/${req.slotId}/${worker.id}/download`, '_blank');
+  };
 
   const coursesMap = useMemo(() => {
     const map = {};
@@ -31,7 +36,8 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
       // If toggle is ON, only show evaluated
       if (showEvaluatedOnly) {
         const slot = (data.schedules[r.courseId] || []).find(s => s.id === r.slotId);
-        const isEval = r.status === 'approved' && slot?.enrolled.filter(e => r.workerIds.includes(e.id)).every(e => e.evaluation !== 'pending');
+        const reqIds = (r.workerIds || []).map(w => typeof w === 'object' ? w.id : w);
+        const isEval = r.status === 'approved' && slot?.enrolled.filter(e => reqIds.includes(e.id)).every(e => e.evaluation !== 'pending');
         if (!isEval) return false;
       }
 
@@ -66,12 +72,25 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
     }
   };
 
+  const handleDeleteRequest = async (requestId) => {
+    if (window.confirm('¿Estás seguro de eliminar esta solicitud?')) {
+      try {
+        await axios.delete(`${API_BASE}/requests/${requestId}`);
+        showToast('Solicitud eliminada correctamente');
+        onRefresh();
+      } catch (err) {
+        showToast(err.response?.data?.error || 'Error al eliminar solicitud', 'error');
+      }
+    }
+  };
+
   const openEvaluation = (req) => {
     const slot = (data.schedules[req.courseId] || []).find(s => s.id === req.slotId);
     if (!slot) return showToast('No se encontró información de la sesión', 'error');
 
     // Initialize evaluation data from current enrollments if they have status
-    const initialEval = req.workerIds.map(wid => {
+    const initialEval = (req.workerIds || []).map(w => {
+      const wid = typeof w === 'object' ? w.id : w;
       const enrollment = slot.enrolled.find(e => e.id === wid);
       return { workerId: wid, status: enrollment?.evaluation || 'pending' };
     });
@@ -156,7 +175,10 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
               const course = coursesMap[req.courseId];
               const slot = (data.schedules[req.courseId] || []).find(s => s.id === req.slotId);
               const isPast = slot && new Date(slot.date) < new Date();
-              const isEvaluated = req.status === 'approved' && slot?.enrolled.filter(e => req.workerIds.includes(e.id)).every(e => e.evaluation !== 'pending');
+              const isEvaluated = req.status === 'approved' && slot?.enrolled.filter(e => {
+                const reqIds = (req.workerIds || []).map(w => typeof w === 'object' ? w.id : w);
+                return reqIds.includes(e.id);
+              }).every(e => e.evaluation !== 'pending');
 
               return (
                 <div key={req.id} className="bg-white p-6 rounded-[32px] border border-slate-200 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
@@ -215,8 +237,16 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
                     <button
                       onClick={() => setSelectedRequest(req)}
                       className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all border border-transparent hover:border-blue-100"
+                      title="Ver Detalle"
                     >
                       <Eye size={20} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteRequest(req.id)}
+                      className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all border border-transparent hover:border-red-100"
+                      title="Eliminar Solicitud"
+                    >
+                      <Trash2 size={20} />
                     </button>
                     <ChevronRight size={16} className="text-slate-200" />
                   </div>
@@ -320,10 +350,13 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
               <div className="flex flex-col h-full">
                 <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Personal ({selectedRequest.workerIds.length})</label>
                 <div className="flex-1 bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-3 overflow-y-auto max-h-48">
-                  {selectedRequest.workerIds.map(wid => {
-                    const worker = data.workers.find(w => w.id === wid);
-                    const slot = (data.schedules[selectedRequest.courseId] || []).find(s => s.id === selectedRequest.slotId);
-                    const enrollment = slot?.enrolled.find(e => e.id === wid);
+                  {(selectedRequest.workerIds || []).map(w => {
+                    const wid = typeof w === 'object' ? w.id : w;
+                    const wname = typeof w === 'object' ? (w.nombre_completo || w.name) : 'Desconocido';
+                    const wrut = typeof w === 'object' ? w.rut : '';
+                    const wcargo = typeof w === 'object' ? w.cargo : '';
+                    const slot = (data?.schedules?.[selectedRequest.courseId] || []).find(s => s.id === selectedRequest.slotId);
+                    const enrollment = slot?.enrolled?.find(e => e.id === wid);
 
                     return (
                       <div key={wid} className="flex items-center justify-between gap-3">
@@ -332,19 +365,30 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
                             <Users size={14} />
                           </div>
                           <div className="truncate">
-                            <div className="text-[10px] font-black text-slate-800 truncate">{worker?.name || 'Desconocido'}</div>
-                            <div className="text-[8px] font-bold text-slate-400">{worker?.rut}</div>
+                            <div className="text-[10px] font-black text-slate-800 truncate">{wname}</div>
+                            <div className="text-[8px] font-bold text-slate-400">ID: {wid} {wrut ? `• RUT: ${wrut}` : ''} {wcargo ? `• ${wcargo}` : ''}</div>
                           </div>
                         </div>
 
                         {selectedRequest.status === 'approved' && (
-                          <div className={cn(
-                            "px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest",
-                            enrollment?.evaluation === 'passed' ? "bg-emerald-50 text-emerald-600" :
-                              enrollment?.evaluation === 'failed' ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-400"
-                          )}>
-                            {enrollment?.evaluation === 'passed' ? 'Aprobado' :
-                              enrollment?.evaluation === 'failed' ? 'Reprobado' : 'Pendiente'}
+                          <div className="flex items-center gap-2">
+                            <div className={cn(
+                              "px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest",
+                              enrollment?.evaluation === 'passed' ? "bg-emerald-50 text-emerald-600" :
+                                enrollment?.evaluation === 'failed' ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-400"
+                            )}>
+                              {enrollment?.evaluation === 'passed' ? 'Aprobado' :
+                                enrollment?.evaluation === 'failed' ? 'Reprobado' : 'Pendiente'}
+                            </div>
+                            {enrollment?.evaluation === 'passed' && (
+                              <button 
+                                onClick={() => handleDownloadCertificate(w, selectedRequest)}
+                                className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                title="Descargar Certificado"
+                              >
+                                <Download size={14} />
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -409,7 +453,13 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
             <div className="p-10 max-h-[60vh] overflow-y-auto">
               <div className="grid grid-cols-1 gap-4">
                 {evaluationData.map(item => {
-                  const worker = data.workers.find(w => w.id === item.workerId);
+                  const reqWorker = (selectedRequest.workerIds || []).find(w => w.id === item.workerId);
+                  const slot = (data?.schedules?.[selectedRequest.courseId] || []).find(s => s.id === selectedRequest.slotId);
+                  const enrolledWorker = slot?.enrolled?.find(e => e.id === item.workerId);
+
+                  const wname = reqWorker?.name || enrolledWorker?.name || 'Trabajador';
+                  const wrut = reqWorker?.rut || enrolledWorker?.rut || item.workerId;
+
                   return (
                     <div key={item.workerId} className="flex items-center justify-between p-6 bg-slate-50 rounded-[32px] border border-slate-100">
                       <div className="flex items-center gap-4">
@@ -417,8 +467,8 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
                           <Users size={24} />
                         </div>
                         <div>
-                          <div className="font-bold text-slate-800">{worker?.name}</div>
-                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{worker?.rut}</div>
+                          <div className="font-bold text-slate-800">{wname}</div>
+                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{wrut}</div>
                         </div>
                       </div>
 
