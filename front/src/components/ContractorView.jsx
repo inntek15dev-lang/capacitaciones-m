@@ -167,8 +167,8 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
       {/* Header */}
       <header className="h-16 flex-shrink-0 flex items-center justify-between px-8 bg-white/40 backdrop-blur-xl border-b border-white/60 z-30">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-            <Zap className="text-white w-6 h-6" />
+          <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-lg shadow-slate-100/50 border border-slate-200/40 p-1.5 overflow-hidden">
+            <img src="/logo-molycop.png" alt="Molycop Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="text-lg font-black text-slate-800 tracking-tight leading-none uppercase">{user.cot_razon_social || 'Contratista Portal'}</h1>
