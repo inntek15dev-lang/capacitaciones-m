@@ -222,7 +222,7 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
 
       <main className="flex-1 overflow-y-auto p-8">
         {activeTab === 'dashboard' ? (
-          <Dashboard data={data} filterContractor={user.contractorName} />
+          <Dashboard data={data} filterContractor={user.contractorName} workers={myWorkers} />
         ) : activeTab === 'workers' ? (
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-8">
