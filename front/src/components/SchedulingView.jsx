@@ -9,18 +9,18 @@ const TODAY = "2026-04-02";
 const fmtD = s => s ? s.split("-").reverse().join("/") : "—";
 const tds = (y,m,d) => `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
 
-function SlotModal({ date, maxCap, onAdd, onClose }) {
-  const [start, setStart] = useState("09:00");
-  const [end, setEnd] = useState("11:00");
-  const [max, setMax] = useState(maxCap);
-  const [modality, setModality] = useState("presencial"); // "online" | "presencial"
+function SlotModal({ date, maxCap, onAdd, onClose, slot }) {
+  const [start, setStart] = useState(slot ? slot.start : "09:00");
+  const [end, setEnd] = useState(slot ? slot.end : "11:00");
+  const [max, setMax] = useState(slot ? slot.max : maxCap);
+  const [modality, setModality] = useState(slot ? (slot.modality || "presencial") : "presencial"); // "online" | "presencial"
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-300">
       <GlassCard className="w-full max-w-sm p-8 space-y-6 scale-in-center">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-lg font-bold text-slate-800">Nueva Sesión</h3>
+            <h3 className="text-lg font-bold text-slate-800">{slot ? 'Editar Sesión' : 'Nueva Sesión'}</h3>
             <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest">{fmtD(date)}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={18} className="text-slate-400" /></button>
@@ -85,7 +85,9 @@ function SlotModal({ date, maxCap, onAdd, onClose }) {
 
         <div className="flex gap-3 pt-2">
           <button onClick={onClose} className="flex-1 py-3 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-colors">Cancelar</button>
-          <AeroButton onClick={() => onAdd({ date, start, end, max: +max, modality })} active className="flex-1 py-3 shadow-blue-500/30">Crear Horario</AeroButton>
+          <AeroButton onClick={() => onAdd({ ...slot, date, start, end, max: +max, modality })} active className="flex-1 py-3 shadow-blue-500/30">
+            {slot ? 'Guardar Cambios' : 'Crear Horario'}
+          </AeroButton>
         </div>
       </GlassCard>
     </div>
@@ -167,6 +169,7 @@ export default function SchedulingView({ course, schedules, onAddSlot, onDeleteS
                         return (
                           <div 
                             key={slot.id} 
+                            onClick={(e) => { e.stopPropagation(); !past && setModal({ date, slot }); }}
                             className={cn(
                               "flex items-center justify-between px-2 py-1.5 rounded-lg text-[9px] font-bold group/slot",
                               isFull ? "bg-red-100 text-red-600" : "bg-blue-100/50 text-blue-700"
@@ -210,10 +213,11 @@ export default function SchedulingView({ course, schedules, onAddSlot, onDeleteS
           </div>
         )}
       </div>
-
+ 
       {modal && (
         <SlotModal 
           date={modal.date} 
+          slot={modal.slot}
           maxCap={course.maxPerSlot} 
           onAdd={onAddSlot} 
           onClose={() => setModal(null)} 

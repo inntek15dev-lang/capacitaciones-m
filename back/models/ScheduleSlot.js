@@ -25,6 +25,10 @@ const ScheduleSlot = sequelize.define('ScheduleSlot', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  modality: {
+    type: DataTypes.STRING,
+    defaultValue: 'presencial',
+  },
   courseId: {
     type: DataTypes.STRING,
     references: {

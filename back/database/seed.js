@@ -63,6 +63,7 @@ const seed = async () => {
                         start: slot.start,
                         end: slot.end,
                         max: slot.max,
+                        modality: slot.modality || 'presencial',
                     }
                 });
 

@@ -165,12 +165,16 @@ export default function App() {
 
   const handleAddSlot = async (slotData) => {
     try {
-      const newSlot = { ...slotData, id: `s${Date.now()}`, enrolled: [] };
+      const isEdit = !!slotData.id;
+      const slotToSave = isEdit 
+        ? slotData 
+        : { ...slotData, id: `s${Date.now()}`, enrolled: [] };
+
       await axios.post(`${API_BASE}/schedules`, {
         courseId: selectedCourseId,
-        slot: newSlot
+        slot: slotToSave
       });
-      showToast('Sesión programada correctamente');
+      showToast(isEdit ? 'Sesión actualizada correctamente' : 'Sesión programada correctamente');
       fetchData();
     } catch (err) {
       showToast('Error al guardar sesión', 'error');
