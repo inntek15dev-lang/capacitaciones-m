@@ -31,5 +31,5 @@
 - **Environment**: Isolated Docker Compose projects (`capacitaciones-m-prepro` and `capacitaciones-m-prod`) to allow side-by-side deployment on the same host. The workflow force-cleans older conflicting container names (`docker rm -f`) during the transition to isolated namespaces.
 
 ## Data Synchronization
-- Initial data migrated from `database/initial.json` to MySQL (contains only the "Seguridad" category, empty workers, and empty schedules/requests). The seeder drops and forces recreation of the database to guarantee clean schemas without InnoDB foreign key clashes. Data serialization handles Sequelize association capitalization safely.
+- Initial data is populated from `database/initial.json` to MySQL using a strictly non-destructive flow (`findOrCreate` and `sequelize.sync({ alter: true })`) to maintain persistence of real data. Dropping the database or tables is strictly forbidden. Data serialization handles Sequelize association capitalization safely.
 - `db.json` is deprecated and should be removed after full verification.
