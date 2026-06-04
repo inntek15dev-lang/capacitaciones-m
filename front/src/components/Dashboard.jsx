@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { cn } from './ui/AeroUI';
 
-export default function Dashboard({ data, filterContractor }) {
+export default function Dashboard({ data, filterContractor, workers }) {
   const stats = useMemo(() => {
     const allSlots = Object.values(data?.schedules || {}).flat();
     const allRequests = data?.requests || [];
@@ -21,9 +21,11 @@ export default function Dashboard({ data, filterContractor }) {
       ? allRequests.filter(r => r.contractorName === filterContractor)
       : allRequests;
 
-    const filteredWorkers = filterContractor
-      ? (data?.workers || []).filter(w => w.contractor === filterContractor)
-      : (data?.workers || []);
+    const filteredWorkers = workers
+      ? workers
+      : (filterContractor
+          ? (data?.workers || []).filter(w => w.contractor === filterContractor)
+          : (data?.workers || []));
 
     const workerIdsOfContractor = new Set(filteredWorkers.map(w => w.id));
 

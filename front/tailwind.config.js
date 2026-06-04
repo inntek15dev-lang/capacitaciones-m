@@ -14,6 +14,19 @@ export default {
           500: '#3b82f6', // Accent blue
           600: '#2563eb',
         },
+        emerald: {
+          50: '#fff7f5',
+          100: '#ffebe6',
+          200: '#ffd3c7',
+          300: '#ffb09c',
+          400: '#ff8261',
+          500: '#ff7d52',
+          600: '#fe652f', // Corporate color
+          700: '#e24f1c',
+          800: '#bc3d14',
+          900: '#9b300f',
+          950: '#541503',
+        },
         glass: {
           base: 'rgba(255, 255, 255, 0.4)',
           border: 'rgba(255, 255, 255, 0.2)',

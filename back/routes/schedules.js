@@ -9,14 +9,26 @@ router.post('/schedules', async (req, res) => {
   try {
     const { courseId, slot, adminEmail } = req.body;
 
-    const newSlot = await ScheduleSlot.create({
-      ...slot,
-      courseId,
-      adminEmail // Saved to DB
-    });
+    let savedSlot;
+    const existingSlot = await ScheduleSlot.findByPk(slot.id);
 
-    res.json({ success: true, slot: newSlot });
+    if (existingSlot) {
+      await existingSlot.update({
+        ...slot,
+        adminEmail
+      });
+      savedSlot = existingSlot;
+    } else {
+      savedSlot = await ScheduleSlot.create({
+        ...slot,
+        courseId,
+        adminEmail
+      });
+    }
+
+    res.json({ success: true, slot: savedSlot });
   } catch (err) {
+    console.error('Error saving slot:', err);
     res.status(500).json({ error: 'Failed to save slot' });
   }
 });

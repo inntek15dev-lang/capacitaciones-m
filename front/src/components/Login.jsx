@@ -37,8 +37,8 @@ export default function Login({ onLoginSuccess }) {
       <div className="w-full max-w-md p-8 relative z-10">
         <div className="bg-white/60 backdrop-blur-2xl p-10 rounded-[40px] border border-white/80 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)]">
           <div className="flex flex-col items-center mb-10">
-            <div className="w-16 h-16 rounded-[24px] bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-2xl shadow-blue-500/40 mb-6">
-              <Zap className="text-white w-8 h-8" />
+            <div className="w-16 h-16 rounded-[24px] bg-white flex items-center justify-center shadow-2xl shadow-slate-200/40 p-2 overflow-hidden border border-slate-100 mb-6">
+              <img src="/logo-molycop.png" alt="Molycop Logo" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-3xl font-black text-slate-800 tracking-tight leading-none mb-2">Bienvenido</h1>
             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-none">CapacitaFlow Admin Portal</p>

@@ -1,0 +1,57 @@
+# CapacitaFlow - database Schema Blueprint
+
+This file outlines the database schema and models managed by Sequelize in the backend.
+
+## Models Schema
+
+### Category
+- `id` (STRING, Primary Key): Category identifier (e.g. 'seg').
+- `label` (STRING): Display name of the category (e.g. '⚡ Seguridad').
+
+### Course
+- `id` (STRING, Primary Key): Course identifier.
+- `name` (STRING): Name of the course.
+- `maxPerSlot` (INTEGER, Default: 15): Maximum capacity per slot for this course.
+- `categoryId` (STRING, Foreign Key): References `Category(id)`.
+
+### ScheduleSlot
+- `id` (STRING, Primary Key): Slot identifier (e.g. 's171746...').
+- `date` (DATEONLY, Required): Scheduled date.
+- `start` (STRING): Start time (e.g. '09:00').
+- `end` (STRING): End time (e.g. '11:00').
+- `max` (INTEGER, Default: 0): Maximum slots capacity.
+- `adminEmail` (STRING, Nullable): Email of the admin who scheduled it.
+- `modality` (STRING, Default: 'presencial'): Modality of the session ('online' or 'presencial').
+- `courseId` (STRING, Foreign Key): References `Course(id)`.
+
+### Enrollment
+- `id` (INTEGER, Primary Key, Auto-Increment)
+- `slotId` (STRING, Foreign Key): References `ScheduleSlot(id)`.
+- `workerId` (STRING): ID of the worker.
+- `workerName` (STRING): Name of the worker.
+- `workerRut` (STRING): RUT of the worker.
+- `workerCargo` (STRING): Job position of the worker.
+- `contractor` (STRING): Contractor name.
+- `evaluation` (ENUM('pending', 'passed', 'failed'), Default: 'pending'): Worker evaluation status.
+
+### Request
+- `id` (STRING, Primary Key): Request identifier.
+- `status` (ENUM('pending', 'approved', 'rejected'), Default: 'pending'): Approval status.
+- `createdAt` (DATE, Default: NOW)
+- `slotId` (STRING): Target slot ID.
+- `courseId` (STRING): Target course ID.
+- `contractorId` (STRING): ID of the contractor.
+- `contractorName` (STRING): Name of the contractor.
+- `contractorEmail` (STRING, Nullable): Email address of the contractor.
+- `workerIds` (JSON): List of worker IDs and metadata requesting enrollment.
+- `data` (JSON): Flex fields.
+
+### User
+- `id` (STRING, Primary Key): User identifier.
+- `username` (STRING): Login username.
+- `password` (STRING): Login password.
+- `role` (ENUM('SuperAdmin', 'Contratista'), Default: 'Contratista'): User role.
+- `name` (STRING): Profile name.
+- `cot_id` (STRING): Contractor ID (if applicable).
+- `cot_razon_social` (STRING): Contractor business name.
+- `plantas` (JSON): List of plants assigned.

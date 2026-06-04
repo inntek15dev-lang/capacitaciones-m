@@ -1,3 +1,5 @@
+// ATENCIÓN: Este script de seeding debe ser estrictamente NO DESTRUCTIVO para preservar la persistencia de datos reales en producción y preproducción.
+// Está ESTRICTAMENTE PROHIBIDO usar `force: true` en sequelize.sync o ejecutar consultas `DROP DATABASE`/`DROP TABLE`.
 const { sequelize, Category, Course, User, ScheduleSlot, Enrollment, Request } = require('../models');
 const initialData = require('./initial.json');
 const mysql = require('mysql2/promise');
@@ -63,6 +65,7 @@ const seed = async () => {
                         start: slot.start,
                         end: slot.end,
                         max: slot.max,
+                        modality: slot.modality || 'presencial',
                     }
                 });
 

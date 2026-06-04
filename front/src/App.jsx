@@ -165,12 +165,16 @@ export default function App() {
 
   const handleAddSlot = async (slotData) => {
     try {
-      const newSlot = { ...slotData, id: `s${Date.now()}`, enrolled: [] };
+      const isEdit = !!slotData.id;
+      const slotToSave = isEdit 
+        ? slotData 
+        : { ...slotData, id: `s${Date.now()}`, enrolled: [] };
+
       await axios.post(`${API_BASE}/schedules`, {
         courseId: selectedCourseId,
-        slot: newSlot
+        slot: slotToSave
       });
-      showToast('Sesión programada correctamente');
+      showToast(isEdit ? 'Sesión actualizada correctamente' : 'Sesión programada correctamente');
       fetchData();
     } catch (err) {
       showToast('Error al guardar sesión', 'error');
@@ -222,8 +226,8 @@ export default function App() {
       {/* Header */}
       <header className="h-16 flex-shrink-0 flex items-center justify-between px-8 bg-white/40 backdrop-blur-xl border-b border-white/60 z-30">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <Zap className="text-white w-6 h-6" />
+          <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-lg shadow-slate-100/50 border border-slate-200/40 p-1.5 overflow-hidden">
+            <img src="/logo-molycop.png" alt="Molycop Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="text-lg font-black text-slate-800 tracking-tight leading-none uppercase">Capacitaciones Molycop</h1>
