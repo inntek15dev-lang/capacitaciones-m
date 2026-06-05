@@ -26,6 +26,18 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  cot_id: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  cot_razon_social: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  plantas: {
+    type: DataTypes.JSON,
+    allowNull: true,
+  },
 }, {
   timestamps: true,
 });
