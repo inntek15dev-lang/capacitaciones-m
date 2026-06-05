@@ -4,6 +4,8 @@ const { sequelize, Category, Course, User, ScheduleSlot, Enrollment, Request } =
 const initialData = require('./initial.json');
 const mysql = require('mysql2/promise');
 
+const { resolveDatabaseConflicts } = require('./dbUtils');
+
 const seed = async () => {
     try {
         console.log('Iniciando el proceso de seeding desde initial.json...');
@@ -18,6 +20,9 @@ const seed = async () => {
         // Ensure database exists without dropping it
         await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
         await connection.end();
+
+        // Resolver conflictos de datos antes de la sincronización de estructura
+        await resolveDatabaseConflicts(sequelize);
 
         // Sincronizar el esquema de forma segura sin borrar datos
         await sequelize.sync({ alter: true });

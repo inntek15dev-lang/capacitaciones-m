@@ -16,6 +16,7 @@ app.use(bodyParser.json());
 
 // Sync database (automatically creating the database if it doesn't exist)
 const mysql = require('mysql2/promise');
+const { resolveDatabaseConflicts } = require('./database/dbUtils');
 const dbName = process.env.DB_NAME || 'capacitaflow_db';
 
 async function initDb() {
@@ -28,6 +29,9 @@ async function initDb() {
     // Use backticks for safety in case of hyphens in DB name
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
     await connection.end();
+    
+    // Resolve structure and data conflicts (such as ENUM differences)
+    await resolveDatabaseConflicts(sequelize);
     
     await sequelize.sync({ alter: true });
     console.log('Database connected and models synced with evaluations.');
