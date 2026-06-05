@@ -11,7 +11,22 @@ const router = require('./routes');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+// CORS: allow only ovalcontrol.com subdomains (+ localhost for dev)
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowed = /^https:\/\/.*\.ovalcontrol\.com$/;
+    if (origin && allowed.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS bloqueado para origen: ${origin}`));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // handle preflight for all routes
 app.use(bodyParser.json());
 
 // Sync database (automatically creating the database if it doesn't exist)
