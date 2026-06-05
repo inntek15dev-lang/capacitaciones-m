@@ -29,6 +29,7 @@ services:
       - DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
       - DB_NAME=${DB_NAME}
       - DB_PORT=${DB_PORT}
+      - PORT=${PORT}
     env_file:
       - .env
     ports:
