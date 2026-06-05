@@ -62,5 +62,7 @@ This file outlines the database schema and models managed by Sequelize in the ba
 ## Schema Sync Notes
 - Schema modifications are safely synchronized at runtime. Any conflict between existing rows and new schema definitions is dynamically resolved by the system (in the seeder and on server startup) prior to altering the schema. Discrepancies in ENUM fields are corrected via custom database modify queries.
 - Initial seed data is retrieved from `back/database/initial.json`.
+- Database port defaults to `3306` inside docker container networks, and resolves to `DB_PORT` for local host environments.
+
 
 

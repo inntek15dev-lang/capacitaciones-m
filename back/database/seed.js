@@ -12,9 +12,14 @@ const seed = async () => {
         
         // 1. Asegurar la creación de la base de datos
         const dbName = process.env.DB_NAME || 'capacitaflow_db';
+        const dbHost = process.env.DB_HOST || 'localhost';
+        const dbPort = (dbHost !== 'localhost' && dbHost !== '127.0.0.1')
+            ? 3306
+            : (parseInt(process.env.DB_PORT, 10) || 3306);
+
         const connection = await mysql.createConnection({
-            host: process.env.DB_HOST || 'localhost',
-            port: process.env.DB_PORT || 3306,
+            host: dbHost,
+            port: dbPort,
             user: process.env.DB_USER || 'root',
             password: process.env.DB_ROOT_PASSWORD || '',
         });
