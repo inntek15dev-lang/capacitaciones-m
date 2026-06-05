@@ -13,6 +13,8 @@ This file outlines the database schema and models managed by Sequelize in the ba
 - `name` (STRING): Name of the course.
 - `maxPerSlot` (INTEGER, Default: 15): Maximum capacity per slot for this course.
 - `categoryId` (STRING, Foreign Key): References `Category(id)`.
+- `niv_id` (INTEGER, Nullable): Level identifier.
+- `plantaNombre` (STRING, Nullable): Plant name.
 
 ### ScheduleSlot
 - `id` (STRING, Primary Key): Slot identifier (e.g. 's171746...').
@@ -54,8 +56,13 @@ This file outlines the database schema and models managed by Sequelize in the ba
 - `name` (STRING): Profile name.
 - `cot_id` (STRING): Contractor ID (if applicable).
 - `cot_razon_social` (STRING): Contractor business name.
+- `contractorName` (STRING, Nullable): Legacy contractor name.
 - `plantas` (JSON): List of plants assigned.
 
 ## Schema Sync Notes
 - Schema modifications are safely synchronized at runtime. Any conflict between existing rows and new schema definitions is dynamically resolved by the system (in the seeder and on server startup) prior to altering the schema. Discrepancies in ENUM fields are corrected via custom database modify queries.
+- Initial seed data is retrieved from `back/database/initial.json`.
+- Database port defaults to `3306` inside docker container networks, and resolves to `DB_PORT` for local host environments.
+
+
 
