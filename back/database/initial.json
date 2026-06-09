@@ -1,17 +1,6 @@
 {
-  "categories": [
-    { "id": "seg", "label": "⚡ Seguridad", "courses": [
-      { "id": "c1", "name": "Uso de EPP", "maxPerSlot": 15 },
-      { "id": "c2", "name": "Trabajo en Altura", "maxPerSlot": 10 },
-      { "id": "c3", "name": "Espacios Confinados", "maxPerSlot": 8 },
-      { "id": "c4", "name": "Bloqueo y Etiquetado (LOTO)", "maxPerSlot": 12 }
-    ]}
-  ],
-  "workers": [],
-  "schedules": {},
   "users": [
     { "id": "u1", "username": "admin", "password": "123", "role": "SuperAdmin", "name": "Pablo Solís" },
     { "id": "u2", "username": "contra1", "password": "123", "role": "Contratista", "name": "Contacto Sur", "contractorName": "Constructora Sur S.A." }
-  ],
-  "requests": []
+  ]
 }
