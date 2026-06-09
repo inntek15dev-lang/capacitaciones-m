@@ -28,22 +28,26 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    // Fallback: allow ovalcontrol.com subdomains and localhost for local development
-    const allowedPattern = /^https:\/\/.*\.ovalcontrol\.com$/;
+    // Fallback: allow ovalcontrol.com and any of its subdomains securely
+    const allowedPattern = /^https:\/\/(.*\.)?ovalcontrol\.com$/;
     const isLocalhost = /^http:\/\/localhost(:\d+)?$/;
 
     if (allowedPattern.test(origin) || isLocalhost.test(origin)) {
       return callback(null, true);
     }
 
+    console.warn(`[CORS] Origen bloqueado: ${origin}`);
     callback(new Error(`CORS bloqueado para origen: ${origin}`));
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  credentials: true, // Allow cookies or authorization headers
   optionsSuccessStatus: 200
 };
+
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // handle preflight for all routes
+// handle preflight for all routes
+app.options('*', cors(corsOptions)); 
 app.use(bodyParser.json());
 
 // Sync database (automatically creating the database if it doesn't exist)
