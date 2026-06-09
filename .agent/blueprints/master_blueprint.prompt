@@ -27,7 +27,7 @@
 - **Request**: Pending/approved/rejected solicitudes for new slots or registrations (supports deletion by administrators).
 
 ## Infrastructure
-- **Connection**: Managed via `.env` variables and `database/db.js`.
+- **Connection**: Managed via `.env` variables and `database/db.js`. Allowed CORS origins in the backend are dynamically governed by the `FRONT_URL` environment variable (which can contain one or more comma-separated domains) defined in the host's `.env` and passed to the containers.
 - **Environment**: Isolated Docker Compose projects (`capacitaciones-m-prepro` and `capacitaciones-m-prod`) to allow side-by-side deployment on the same host. The workflow force-cleans older conflicting container names (`docker rm -f`) during the transition to isolated namespaces.
 
 ## Data Synchronization
