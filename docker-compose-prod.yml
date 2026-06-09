@@ -30,6 +30,7 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_PORT=${DB_PORT}
       - PORT=${PORT}
+      - FRONT_URL=${FRONT_URL}
     env_file:
       - .env
     ports:

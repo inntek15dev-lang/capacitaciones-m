@@ -8,6 +8,7 @@ const requestsRouter = require('./requests');
 const workersRouter = require('./workers');
 const dataRouter = require('./data');
 const certificatesRouter = require('./certificates');
+const categoriesRouter = require('./categories');
 
 // Health Check
 router.get('/health', (req, res) => res.json({ status: 'ok', version: '2.0-proxy-priority' }));
@@ -15,6 +16,7 @@ router.get('/health', (req, res) => res.json({ status: 'ok', version: '2.0-proxy
 // Sub-routers mounting
 router.use('/auth', authRouter);
 router.use('/courses', coursesRouter);
+router.use('/categories', categoriesRouter);
 router.use('/', schedulesRouter); // Handles /schedules, /enroll, /enrollments/evaluation
 router.use('/requests', requestsRouter);
 router.use('/', workersRouter); // Handles /external/workers

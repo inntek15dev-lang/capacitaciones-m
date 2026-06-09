@@ -20,6 +20,41 @@ export default function CharlasView({ categories, user, onRefresh }) {
     plantaNombre: ''
   });
 
+  // Category management state
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [newCategoryLabel, setNewCategoryLabel] = useState('');
+  const [editingCategory, setEditingCategory] = useState(null);
+
+  const handleSaveCategory = async () => {
+    if (!newCategoryLabel.trim()) return;
+    try {
+      if (editingCategory) {
+        await axios.put(`${API_BASE}/categories/${editingCategory.id}`, { label: newCategoryLabel });
+      } else {
+        await axios.post(`${API_BASE}/categories`, { label: newCategoryLabel });
+      }
+      setNewCategoryLabel('');
+      setEditingCategory(null);
+      onRefresh();
+    } catch (err) {
+      alert("Error al guardar la categoría");
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId, label) => {
+    if (window.confirm(`¿Estás seguro de eliminar la categoría "${label}"? Esto también eliminará todas las charlas asociadas a ella.`)) {
+      try {
+        await axios.delete(`${API_BASE}/categories/${categoryId}`);
+        onRefresh();
+        if (formData.categoryId === categoryId) {
+          setFormData(prev => ({ ...prev, categoryId: '' }));
+        }
+      } catch (err) {
+        alert("Error al eliminar la categoría");
+      }
+    }
+  };
+
   const openNewModal = () => {
     setEditingCourse(null);
     setFormData({
@@ -47,6 +82,9 @@ export default function CharlasView({ categories, user, onRefresh }) {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingCourse(null);
+    setShowCategoryManager(false);
+    setNewCategoryLabel('');
+    setEditingCategory(null);
   };
 
   const handleSubmit = async (e) => {
@@ -170,18 +208,93 @@ export default function CharlasView({ categories, user, onRefresh }) {
 
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Categoría</label>
-                <select
-                  required
-                  value={formData.categoryId}
-                  onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none"
-                >
-                  <option value="" disabled>Seleccione una categoría...</option>
-                  {categories.map(c => (
-                    <option key={c.id} value={c.id}>{c.label}</option>
-                  ))}
-                </select>
+                <div className="flex gap-2">
+                  <select
+                    required
+                    value={formData.categoryId}
+                    onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
+                    className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  >
+                    <option value="" disabled>Seleccione una categoría...</option>
+                    {categories.map(c => (
+                      <option key={c.id} value={c.id}>{c.label}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowCategoryManager(!showCategoryManager)}
+                    className="px-4 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                    title="Gestionar Categorías"
+                  >
+                    {showCategoryManager ? 'Cerrar' : 'Gestionar'}
+                  </button>
+                </div>
               </div>
+
+              {showCategoryManager && (
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-4 animate-in slide-in-from-top duration-200">
+                  <div className="text-xs font-black text-slate-500 uppercase tracking-widest border-b border-slate-200/60 pb-1.5 flex items-center justify-between">
+                    <span>Gestionar Categorías</span>
+                  </div>
+                  
+                  {/* Formulario Categoría */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newCategoryLabel}
+                      onChange={e => setNewCategoryLabel(e.target.value)}
+                      placeholder={editingCategory ? "Editar categoría..." : "Nueva categoría..."}
+                      className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveCategory}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors"
+                    >
+                      {editingCategory ? "Guardar" : "Añadir"}
+                    </button>
+                    {editingCategory && (
+                      <button
+                        type="button"
+                        onClick={() => { setEditingCategory(null); setNewCategoryLabel(''); }}
+                        className="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl text-xs font-bold transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Listado de Categorías */}
+                  <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
+                    {categories.map(c => (
+                      <div key={c.id} className="flex items-center justify-between p-2.5 bg-white border border-slate-100 rounded-xl text-xs">
+                        <span className="font-semibold text-slate-700">{c.label}</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => { setEditingCategory(c); setNewCategoryLabel(c.label); }}
+                            className="p-1 hover:bg-blue-50 hover:text-blue-600 rounded text-slate-400 transition-colors"
+                            title="Editar"
+                          >
+                            <Edit2 size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCategory(c.id, c.label)}
+                            className="p-1 hover:bg-red-50 hover:text-red-600 rounded text-slate-400 transition-colors"
+                            title="Eliminar"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {categories.length === 0 && (
+                      <div className="text-center py-4 text-slate-400 font-medium">No hay categorías registradas</div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Capacidad por sesión</label>

@@ -11,7 +11,39 @@ const router = require('./routes');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+// CORS options: dynamically load FRONT_URL from environment
+const allowedOrigins = process.env.FRONT_URL
+  ? process.env.FRONT_URL.split(',').map(url => url.trim())
+  : [];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Permit requests without an origin (like server-to-server or curl)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    // Permit if origin matches FRONT_URL defined in the server .env
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Fallback: allow ovalcontrol.com subdomains and localhost for local development
+    const allowedPattern = /^https:\/\/.*\.ovalcontrol\.com$/;
+    const isLocalhost = /^http:\/\/localhost(:\d+)?$/;
+
+    if (allowedPattern.test(origin) || isLocalhost.test(origin)) {
+      return callback(null, true);
+    }
+
+    callback(new Error(`CORS bloqueado para origen: ${origin}`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // handle preflight for all routes
 app.use(bodyParser.json());
 
 // Sync database (automatically creating the database if it doesn't exist)
