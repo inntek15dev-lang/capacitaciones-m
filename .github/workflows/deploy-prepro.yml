@@ -37,10 +37,9 @@ jobs:
 
       - name: Create Frontend .env file
         run: |
-          echo "VITE_API_BASE_URL=http://${{ secrets.SERVER_IP }}:3001" > ./front/.env
-          echo "Frontend .env created with API URL: $(cat ./front/.env)"
-        # La URL del API debe ser la IP pública o dominio del servidor, accesible desde el navegador del cliente.
-        # El puerto es el que se expone en docker-compose.yml para la API.
+          echo "VITE_API_URL=https://prepro-capacitaciones-m-api.ovalcontrol.com/api/v1" > ./front/.env
+          echo "Frontend .env created with API URL: \$(cat ./front/.env)"
+        # La URL del API debe ser la de preproducción.
 
       - name: Build y Push Frontend
         uses: docker/build-push-action@v5
@@ -90,9 +89,12 @@ jobs:
             # Login en el registro de GitHub
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # Actualizar imágenes y reiniciar contenedores de forma forzada
+            # Detener contenedores y limpiar base de datos anterior (reconstrucción limpia y sin persistencia)
+            docker compose -f docker-compose-prepro.yml down || true
+            sudo rm -rf mysql_data
+            
+            # Descargar nuevas imágenes y recrear contenedores desde cero
             docker compose -f docker-compose-prepro.yml pull
-            docker rm -f prepro-capacitaciones-m-db prepro-capacitaciones-m-api prepro-capacitaciones-m-front || true
             docker compose -f docker-compose-prepro.yml up -d --force-recreate
             
             # --- Automatización de Base de Datos ---
