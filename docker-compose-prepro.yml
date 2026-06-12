@@ -23,7 +23,7 @@ services:
     container_name: prepro-capacitaciones-m-api
     restart: always
     environment:
-      - NODE_ENV=preproduction
+      - NODE_ENV=${NODE_ENV}
       - DB_HOST=${DB_HOST}
       - DB_USER={DB_USER}
       - DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
