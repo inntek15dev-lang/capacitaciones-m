@@ -1,0 +1,46 @@
+{
+    "id": "psolis",
+    "name": "psolis",
+    "email": "psolis@inntek.cl",
+    "role": "Administrador",
+    "plantas": [
+        {
+            "nombre": "PLANTA TALCAHUANO",
+            "id_planta": 4068281,
+            "niv_id": 4068281
+        },
+        {
+            "nombre": "PLANTA CONCEPCION",
+            "id_planta": 4068282,
+            "niv_id": 4068282
+        },
+        {
+            "nombre": "PLANTA MEJILLONES",
+            "id_planta": 4068283,
+            "niv_id": 4068283
+        },
+        {
+            "nombre": "PLANTA SANTIAGO",
+            "id_planta": 4068284,
+            "niv_id": 4068284
+        },
+        {
+            "nombre": "CASA MATRIZ SANTIAGO",
+            "id_planta": 4068285,
+            "niv_id": 4068285
+        },
+        {
+            "nombre": "ASEO MEJILLONES",
+            "id_planta": 4068290,
+            "niv_id": 4068290
+        },
+        {
+            "nombre": "ASEO INDUSTRIAL THNO",
+            "id_planta": 4068291,
+            "niv_id": 4068291
+        }
+    ],
+    "cot_id": null,
+    "cot_razon_social": "MOLYCOP CHILE S.A.",
+    "contractorName": null
+}

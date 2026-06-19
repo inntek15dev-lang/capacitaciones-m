@@ -14,7 +14,7 @@ services:
     ports:
       - "127.0.0.1:3351:3306"
     volumes:
-      - ./mysql_data:/var/lib/mysql
+      - prod-mysql-data:/var/lib/mysql
     networks:
       - capacitaciones-m
 
@@ -56,3 +56,6 @@ services:
 networks:
   capacitaciones-m:
     driver: bridge
+
+volumes:
+  prod-mysql-data:

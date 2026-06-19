@@ -20,15 +20,15 @@
 - **Worker**: Personnel assigned to training events. Includes RUT and contractor details.
 
 ### SecurityContext
-- **User**: Auth entities with roles (SuperAdmin, Contratista).
+- **User**: Auth entities with roles (SuperAdmin, Contratista) and email. A UserInfo component displays the logged-in user name, role, and email in the headers.
 - **Session Management**: External login links (SSO/bypass) force-close any active previous session before initiating the new user session.
 
 ### LogisticsContext
 - **Request**: Pending/approved/rejected solicitudes for new slots or registrations (supports deletion by administrators).
 
 ## Infrastructure
-- **Connection**: Managed via `.env` variables and `database/db.js`. Allowed CORS origins in the backend are dynamically governed by the `FRONT_URL` environment variable (which can contain one or more comma-separated domains) defined in the host's `.env` and passed to the containers.
-- **Environment**: Isolated Docker Compose projects (`capacitaciones-m-prepro` and `capacitaciones-m-prod`) to allow side-by-side deployment on the same host. The workflow force-cleans older conflicting container names (`docker rm -f`) during the transition to isolated namespaces.
+- **Connection**: Managed via `.env` variables and `database/db.js`. Allowed CORS origins in the backend are dynamically governed by the `FRONT_URL` environment variable (which can contain one or more comma-separated domains) defined in the host's `.env` and passed to the containers. Frontend views (AgendaPanel, RequestsView, CharlasView, SchedulingView, and Dashboard) incorporate real-time console logs of read JSON data structures to enable system traceability.
+- **Environment**: Isolated Docker Compose projects (`capacitaciones-m-prepro` and `capacitaciones-m-prod`) to allow side-by-side deployment on the same host. The workflow force-cleans older conflicting container names (`docker rm -f`) during the transition to isolated namespaces. Data persistence and isolation are secured by mapping MySQL data to isolated named volumes (`prod-mysql-data` and `prepro-mysql-data` respectively) instead of shared host-relative directories.
 
 ## Data Synchronization
 - The seeder (`back/database/seed.js`) and server startup (`server.js`) both ensure database structure integrity via a three-step pipeline: `CREATE DATABASE IF NOT EXISTS`, `resolveDatabaseConflicts()`, and `sequelize.sync({ alter: true })`. This guarantees the schema is always up to date without ever dropping tables or databases.

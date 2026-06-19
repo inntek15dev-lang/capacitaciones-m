@@ -102,6 +102,12 @@ export default function App() {
     }
   }, [bypassActive, user]);
 
+  useEffect(() => {
+    if (user) {
+      console.log("[App] Logged-in user session data:", user);
+    }
+  }, [user]);
+
   const fetchData = async () => {
     try {
       setLoading(true);

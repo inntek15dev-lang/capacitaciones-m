@@ -14,7 +14,7 @@ services:
     ports:
       - "127.0.0.1:3350:3306"
     volumes:
-      - ./mysql_data:/var/lib/mysql
+      - prepro-mysql-data:/var/lib/mysql
     networks:
       - prepro-capacitaciones-m
 
@@ -56,3 +56,6 @@ services:
 networks:
   prepro-capacitaciones-m:
     driver: bridge
+
+volumes:
+  prepro-mysql-data:
