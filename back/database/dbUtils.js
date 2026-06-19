@@ -156,15 +156,7 @@ const resolveDatabaseConflicts = async (sequelizeInstance) => {
                         }
 
                         if (hasConflict) {
-                            console.log(`[Conflicto Detectado] Tabla: ${tableName}, Columna: ${columnName}, PK: ${pkVal}. Valor incompatible "${val}". Corrigiendo a: ${resolvedValue}`);
-                            try {
-                                await model.update(
-                                    { [columnName]: resolvedValue },
-                                    { where: { [pkAttr]: pkVal }, hooks: false, validate: false }
-                                );
-                            } catch (updateErr) {
-                                console.error(`Error al actualizar fila con PK ${pkVal} en ${tableName}.${columnName}:`, updateErr.message);
-                            }
+                            console.warn(`[Conflicto Detectado - SIN MODIFICACIÓN] Tabla: ${tableName}, Columna: ${columnName}, PK: ${pkVal}. Valor incompatible "${val}". De acuerdo con las políticas de persistencia estricta, no se modificará el dato preexistente.`);
                         }
                     }
                 }
