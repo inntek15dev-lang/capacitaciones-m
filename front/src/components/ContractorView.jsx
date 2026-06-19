@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Users, ClipboardList, LogOut, Zap, Search, Plus, CheckCircle, Calendar, Clock, Eye, XCircle, LayoutDashboard, ChevronRight, Download, Monitor, MapPin } from 'lucide-react';
 import { AeroButton, cn } from './ui/AeroUI';
 import Dashboard from './Dashboard';
+import UserInfo from './UserInfo';
 import config from '../config';
 import { downloadCertificate } from '../utils/pdfGenerator';
 
@@ -207,10 +208,7 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
         </nav>
 
         <div className="flex items-center gap-4">
-           <div className="text-right">
-             <div className="text-xs font-bold text-slate-800">{user.name}</div>
-             <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Gestor Externo</div>
-           </div>
+           <UserInfo user={user} />
            <button 
              onClick={onLogout}
              className="w-10 h-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors shadow-sm"

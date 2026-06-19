@@ -1,6 +1,6 @@
 {
   "users": [
-    { "id": "u1", "username": "admin", "password": "123", "role": "SuperAdmin", "name": "Pablo Solís" },
-    { "id": "u2", "username": "contra1", "password": "123", "role": "Contratista", "name": "Contacto Sur", "contractorName": "Constructora Sur S.A." }
+    { "id": "u1", "username": "admin", "password": "123", "role": "SuperAdmin", "name": "Pablo Solís", "email": "pablo.solis@molycop.com" },
+    { "id": "u2", "username": "contra1", "password": "123", "role": "Contratista", "name": "Contacto Sur", "contractorName": "Constructora Sur S.A.", "email": "contacto.sur@example.com" }
   ]
 }

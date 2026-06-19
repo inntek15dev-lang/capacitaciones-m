@@ -38,6 +38,10 @@ const User = sequelize.define('User', {
     type: DataTypes.JSON,
     allowNull: true,
   },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 }, {
   timestamps: true,
 });
