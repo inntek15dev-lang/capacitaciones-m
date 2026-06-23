@@ -133,7 +133,8 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
         ...requestForm,
         workerIds: mappedWorkers,
         contractorId: user.id,
-        contractorName: user.contractorName
+        contractorName: user.contractorName,
+        contractorEmail: user.email
       });
       setIsRequestModalOpen(false);
       setRequestForm({ courseId: '', slotId: '', workerIds: [], justification: '' });
