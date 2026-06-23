@@ -22,7 +22,7 @@ This file outlines the database schema and models managed by Sequelize in the ba
 - `start` (STRING): Start time (e.g. '09:00').
 - `end` (STRING): End time (e.g. '11:00').
 - `max` (INTEGER, Default: 0): Maximum slots capacity.
-- `adminEmail` (STRING, Nullable): Email of the admin who scheduled it.
+- `adminEmail` (STRING, Nullable): Email of the admin who scheduled it (passed from the frontend user session).
 - `modality` (STRING, Default: 'presencial'): Modality of the session ('online' or 'presencial').
 - `courseId` (STRING, Foreign Key): References `Course(id)`.
 

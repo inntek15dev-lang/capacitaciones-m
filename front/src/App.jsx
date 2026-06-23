@@ -179,7 +179,8 @@ export default function App() {
 
       await axios.post(`${API_BASE}/schedules`, {
         courseId: selectedCourseId,
-        slot: slotToSave
+        slot: slotToSave,
+        adminEmail: user?.email
       });
       showToast(isEdit ? 'Sesión actualizada correctamente' : 'Sesión programada correctamente');
       fetchData();
