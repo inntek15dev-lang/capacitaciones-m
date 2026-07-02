@@ -9,6 +9,10 @@ import config from '../config';
 const API_BASE = config.API_BASE;
 
 export default function RequestsView({ requests, data, onRefresh, showToast }) {
+  useMemo(() => {
+    console.log("[RequestsView] Reading requests data:", requests);
+  }, [requests]);
+
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isEvaluationModalOpen, setIsEvaluationModalOpen] = useState(false);
   const [evaluationData, setEvaluationData] = useState([]); // { workerId, status }

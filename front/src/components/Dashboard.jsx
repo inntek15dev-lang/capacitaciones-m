@@ -12,6 +12,10 @@ import {
 import { cn } from './ui/AeroUI';
 
 export default function Dashboard({ data, filterContractor, workers }) {
+  useMemo(() => {
+    console.log("[Dashboard] Reading dashboard data object:", data);
+  }, [data]);
+
   const stats = useMemo(() => {
     const allSlots = Object.values(data?.schedules || {}).flat();
     const allRequests = data?.requests || [];

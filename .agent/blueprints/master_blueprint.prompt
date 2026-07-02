@@ -12,7 +12,7 @@
 ### EducationContext
 - **Category**: Grouping of courses (e.g., Seguridad, Calidad). Has many **courses** (alias: `courses`). Supports complete CRUD operations (create, update, delete) by administrators directly within the course manager interface.
 - **Course**: A specific training unit with capacity rules.
-- **ScheduleSlot**: A scheduled event for a course (date, time, max capacity, and modality which can be 'online' or 'presencial'). Includes many **workers** (alias: `workers`).
+- **ScheduleSlot**: A scheduled event for a course (date, time, max capacity, modality which can be 'online' or 'presencial', and the creator admin's email). Includes many **workers** (alias: `workers`).
 - **Enrollment**: Many-to-many relationship between Workers and ScheduleSlots. Includes `evaluation` status (`pending`, `passed`, `failed`).
 - **Request**: Request from a contractor to enroll N workers in a specific slot (stores worker IDs alongside their full name as an array of objects). Status: `pending`, `approved`, `rejected`. Approved requests trigger automatic enrollment. Admin evaluates individual workers after the slot date has passed.
 
@@ -20,18 +20,18 @@
 - **Worker**: Personnel assigned to training events. Includes RUT and contractor details.
 
 ### SecurityContext
-- **User**: Auth entities with roles (SuperAdmin, Contratista).
+- **User**: Auth entities with roles (SuperAdmin, Contratista) and email. A UserInfo component displays the logged-in user name, role, and email in the headers.
 - **Session Management**: External login links (SSO/bypass) force-close any active previous session before initiating the new user session.
 
 ### LogisticsContext
 - **Request**: Pending/approved/rejected solicitudes for new slots or registrations (supports deletion by administrators).
 
 ## Infrastructure
-- **Connection**: Managed via `.env` variables and `database/db.js`. Allowed CORS origins in the backend are dynamically governed by the `FRONT_URL` environment variable (which can contain one or more comma-separated domains) defined in the host's `.env` and passed to the containers.
-- **Environment**: Isolated Docker Compose projects (`capacitaciones-m-prepro` and `capacitaciones-m-prod`) to allow side-by-side deployment on the same host. The workflow force-cleans older conflicting container names (`docker rm -f`) during the transition to isolated namespaces.
+- **Connection**: Managed via `.env` variables and `database/db.js`. Allowed CORS origins in the backend are dynamically governed by the `FRONT_URL` environment variable (which can contain one or more comma-separated domains) defined in the host's `.env` and passed to the containers. Frontend views (AgendaPanel, RequestsView, CharlasView, SchedulingView, and Dashboard) incorporate real-time console logs of read JSON data structures to enable system traceability.
+- **Environment**: Isolated Docker Compose projects (`capacitaciones-m-prepro` and `capacitaciones-m-prod`) to allow side-by-side deployment on the same host. The workflow force-cleans older conflicting container names (`docker rm -f`) during the transition to isolated namespaces. Data persistence and isolation are secured by mapping MySQL data to isolated named volumes (`prod-mysql-data` and `prepro-mysql-data` respectively) instead of shared host-relative directories.
 
 ## Data Synchronization
 - The seeder (`back/database/seed.js`) and server startup (`server.js`) both ensure database structure integrity via a three-step pipeline: `CREATE DATABASE IF NOT EXISTS`, `resolveDatabaseConflicts()`, and `sequelize.sync({ alter: true })`. This guarantees the schema is always up to date without ever dropping tables or databases.
 - The seeder is **strictly non-destructive**: it uses `findOrCreate` exclusively and **never deletes pre-existing data**. It only creates base system users defined in `back/database/initial.json` (e.g., a SuperAdmin and a Contratista test user). No sample categories, courses, schedules, enrollments, or requests are seeded — all domain data is created exclusively by real users through the application.
-- Before executing the database sync (both in the seeder and on server startup), the system automatically inspects the schema and resolves data-type, nullability, or format conflicts in existing rows, correcting incompatibilities to safe default values (`NULL`, `0`, `"N/A"`, `false`). Discrepancies in ENUM definitions are resolved using custom `ALTER TABLE` queries to ensure production schema updates run successfully.
+- Before executing the database sync (both in the seeder and on server startup), the system automatically inspects the schema and identifies data-type, nullability, or format conflicts in existing rows. Any detected discrepancies are logged as warnings and NEVER automatically updated, modified, or deleted in pre-existing data, protecting row integrity. Discrepancies in ENUM definitions are resolved using custom `ALTER TABLE` queries to ensure production schema updates run successfully.
 - Database port resolution adapts automatically: if `DB_HOST` is a docker container host name or IP (i.e. not `localhost` or `127.0.0.1`), it forces internal port `3306` to avoid conflicts with host-mapped ports (e.g. `3350` or `3351`). Dropping the database or tables is strictly forbidden.

@@ -10,6 +10,7 @@ import Login from './components/Login';
 import ContractorView from './components/ContractorView';
 import RequestsView from './components/RequestsView';
 import Dashboard from './components/Dashboard';
+import UserInfo from './components/UserInfo';
 import { AeroButton, cn } from './components/ui/AeroUI';
 import config from './config';
 
@@ -101,6 +102,12 @@ export default function App() {
     }
   }, [bypassActive, user]);
 
+  useEffect(() => {
+    if (user) {
+      console.log("[App] Logged-in user session data:", user);
+    }
+  }, [user]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -172,7 +179,8 @@ export default function App() {
 
       await axios.post(`${API_BASE}/schedules`, {
         courseId: selectedCourseId,
-        slot: slotToSave
+        slot: slotToSave,
+        adminEmail: user?.email
       });
       showToast(isEdit ? 'Sesión actualizada correctamente' : 'Sesión programada correctamente');
       fetchData();
@@ -275,10 +283,7 @@ export default function App() {
         </nav>
 
         <div className="flex items-center gap-4">
-           <div className="text-right">
-             <div className="text-xs font-bold text-slate-800">{user.name}</div>
-             <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{user.role}</div>
-           </div>
+           <UserInfo user={user} />
            <button 
              onClick={handleLogout}
              className="w-10 h-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors shadow-sm"
