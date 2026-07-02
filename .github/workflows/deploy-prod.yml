@@ -89,9 +89,8 @@ jobs:
             # Login en el registro de GitHub
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # Detener contenedores y limpiar base de datos anterior (reconstrucción limpia y sin persistencia)
+            # Detener contenedores
             docker compose -f docker-compose-prod.yml down || true
-            sudo rm -rf mysql_data
             
             # Descargar nuevas imágenes y recrear contenedores desde cero
             docker compose -f docker-compose-prod.yml pull
@@ -102,8 +101,9 @@ jobs:
             echo "Esperando 15 segundos a que la app inicie y sincronice la base de datos..."
             sleep 15
             
-            echo "Poblando base de datos con database/seed.js..."
-            docker exec capacitaciones-m-api node database/seed.js || echo "Skip seed"
+            # Se deshabilita la ejecución automática del seeder en producción para proteger los datos
+            # echo "Poblando base de datos con database/seed.js..."
+            # docker exec capacitaciones-m-api node database/seed.js || echo "Skip seed"
             
             # Limpieza de imágenes antiguas para optimizar espacio
             docker image prune -f
