@@ -29,7 +29,31 @@ function isWithinAllowedTime() {
   }
 }
 
+function getChileTime() {
+  try {
+    const options = { timeZone: 'America/Santiago', hour12: false, hour: 'numeric', minute: 'numeric', second: 'numeric' };
+    const formatter = new Intl.DateTimeFormat('en-US', options);
+    const parts = formatter.formatToParts(new Date());
+    const hour = parts.find(p => p.type === 'hour').value.padStart(2, '0');
+    const minute = parts.find(p => p.type === 'minute').value.padStart(2, '0');
+    const second = parts.find(p => p.type === 'second').value.padStart(2, '0');
+    return `${hour}:${minute}:${second}`;
+  } catch (e) {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+  }
+}
+
 export default function ContractorView({ user, data, onLogout, onRefresh }) {
+  const [currentChileTime, setCurrentChileTime] = useState(getChileTime());
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentChileTime(getChileTime());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'workers' | 'requests'
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -428,7 +452,7 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
               <Clock className={cn("w-5 h-5 mt-0.5 shrink-0", isWithinAllowedTime() ? "text-blue-500" : "text-rose-500")} />
               <div>
                 <h4 className="text-sm font-black uppercase tracking-wider mb-1">
-                  Horario de Solicitudes: 07:00 a 16:00
+                  Horario de Solicitudes: 07:00 a 16:00 (Hora actual: {currentChileTime})
                 </h4>
                 <p className="text-sm font-medium leading-relaxed">
                   No se aceptan solicitudes fuera del horario establecido de 7AM a 16:00 y NO procesarán excepciones para asegurar su planificación.
