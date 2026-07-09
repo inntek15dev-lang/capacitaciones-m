@@ -66,6 +66,11 @@ jobs:
             sudo mkdir -p /home/DOCKERS-PROD/CAPACITACIONES-M/
             sudo chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} /home/DOCKERS-PROD/CAPACITACIONES-M/
             sudo chmod -R 775 /home/DOCKERS-PROD/CAPACITACIONES-M/
+            
+            # Asegurar existencia y permisos del directorio de respaldos
+            sudo mkdir -p /home/inntek/backups/db/capacitaciones-m/
+            sudo chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} /home/inntek/backups/
+            sudo chmod -R 775 /home/inntek/backups/
 
       - name: Copiar docker-compose al servidor
         uses: appleboy/scp-action@v0.1.7
@@ -88,6 +93,38 @@ jobs:
             
             # Login en el registro de GitHub
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # --- Respaldar Base de Datos ---
+            if [ -f .env ]; then
+              export $(grep -v '^#' .env | xargs)
+            fi
+            
+            DB_CONTAINER="capacitaciones-m-db"
+            BACKUP_DIR="/home/inntek/backups/db/capacitaciones-m"
+            DATE_STR=$(date +"%d-%m-%y")
+            
+            if docker ps --format '{{.Names}}' | grep -Eq "^${DB_CONTAINER}$"; then
+              echo "Iniciando respaldo de base de datos..."
+              
+              # Buscar backup last-0 existente y rotarlo a last-1
+              EXISTING_LAST0=$(find "$BACKUP_DIR" -name "backup-db-capacitaciones-m-*-last-0.sql" -type f | head -n 1)
+              if [ -n "$EXISTING_LAST0" ]; then
+                NEW_LAST1="${EXISTING_LAST0/-last-0.sql/-last-1.sql}"
+                rm -f "$NEW_LAST1"
+                mv "$EXISTING_LAST0" "$NEW_LAST1"
+                echo "Rotado respaldo anterior a: $(basename "$NEW_LAST1")"
+              fi
+              
+              # Limpiar respaldos last-1 antiguos para conservar un máximo de 2
+              find "$BACKUP_DIR" -name "backup-db-capacitaciones-m-*-last-1.sql" -type f | grep -v "${NEW_LAST1:-__none__}" | xargs rm -f 2>/dev/null || true
+              
+              # Generar nuevo backup last-0
+              NEW_BACKUP="${BACKUP_DIR}/backup-db-capacitaciones-m-${DATE_STR}-last-0.sql"
+              docker exec "$DB_CONTAINER" mysqldump -u root -p"${DB_ROOT_PASSWORD}" "${DB_NAME}" > "$NEW_BACKUP"
+              echo "Respaldo generado con éxito: $(basename "$NEW_BACKUP")"
+            else
+              echo "Advertencia: Contenedor ${DB_CONTAINER} no está activo. Saltando respaldo."
+            fi
             
             # Detener contenedores
             docker compose -f docker-compose-prod.yml down || true
