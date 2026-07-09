@@ -68,6 +68,7 @@ jobs:
             sudo chmod -R 775 /home/DOCKERS-PREPROD/CAPACITACIONES-M/
             
             # Asegurar existencia y permisos del directorio de respaldos
+            sudo chmod +x /home/inntek
             sudo mkdir -p /home/inntek/backups/db/capacitaciones-m/
             sudo chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} /home/inntek/backups/
             sudo chmod -R 775 /home/inntek/backups/
