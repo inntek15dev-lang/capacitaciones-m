@@ -39,7 +39,7 @@ This file outlines the database schema and models managed by Sequelize in the ba
 ### Request
 - `id` (STRING, Primary Key): Request identifier.
 - `status` (ENUM('pending', 'approved', 'rejected'), Default: 'pending'): Approval status.
-- `createdAt` (DATE, Default: NOW)
+- `createdAt` (DATE, Default: NOW): Request timestamp. Creation is restricted to 07:00 - 16:00 Chile Time.
 - `slotId` (STRING): Target slot ID.
 - `courseId` (STRING): Target course ID.
 - `contractorId` (STRING): ID of the contractor.

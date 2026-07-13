@@ -9,7 +9,51 @@ import { downloadCertificate } from '../utils/pdfGenerator';
 
 const API_BASE = config.API_BASE;
 
+function isWithinAllowedTime() {
+  try {
+    const options = { timeZone: 'America/Santiago', hour12: false, hour: 'numeric', minute: 'numeric', second: 'numeric' };
+    const formatter = new Intl.DateTimeFormat('en-US', options);
+    const parts = formatter.formatToParts(new Date());
+    const hour = parseInt(parts.find(p => p.type === 'hour').value, 10);
+    if (hour < 7 || hour >= 16) {
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error('Error checking time restrictions:', e);
+    const hour = new Date().getHours();
+    if (hour < 7 || hour >= 16) {
+      return false;
+    }
+    return true;
+  }
+}
+
+function getChileTime() {
+  try {
+    const options = { timeZone: 'America/Santiago', hour12: false, hour: 'numeric', minute: 'numeric', second: 'numeric' };
+    const formatter = new Intl.DateTimeFormat('en-US', options);
+    const parts = formatter.formatToParts(new Date());
+    const hour = parts.find(p => p.type === 'hour').value.padStart(2, '0');
+    const minute = parts.find(p => p.type === 'minute').value.padStart(2, '0');
+    const second = parts.find(p => p.type === 'second').value.padStart(2, '0');
+    return `${hour}:${minute}:${second}`;
+  } catch (e) {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+  }
+}
+
 export default function ContractorView({ user, data, onLogout, onRefresh }) {
+  const [currentChileTime, setCurrentChileTime] = useState(getChileTime());
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentChileTime(getChileTime());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'workers' | 'requests'
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -116,6 +160,10 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
 
   const handleCreateRequest = async (e) => {
     e.preventDefault();
+    if (!isWithinAllowedTime()) {
+      alert('No se aceptan solicitudes fuera del horario establecido de 7AM a 16:00 y NO procesarán excepciones para asegurar su planificación.');
+      return;
+    }
     if (requestForm.workerIds.length === 0) return alert('Seleccione al menos un trabajador');
     
     try {
@@ -374,9 +422,46 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
                   </button>
                 </div>
 
-                <AeroButton onClick={() => setIsRequestModalOpen(true)} active className="px-6 flex items-center gap-2">
+                <AeroButton 
+                  onClick={() => {
+                    if (!isWithinAllowedTime()) {
+                      alert("No se aceptan solicitudes fuera del horario establecido de 7AM a 16:00 y NO procesarán excepciones para asegurar su planificación.");
+                      return;
+                    }
+                    setIsRequestModalOpen(true);
+                  }}
+                  active={isWithinAllowedTime()}
+                  disabled={!isWithinAllowedTime()}
+                  className={cn(
+                    "px-6 flex items-center gap-2 transition-all duration-300",
+                    !isWithinAllowedTime() && "opacity-50 cursor-not-allowed bg-slate-300/50 text-slate-400 border border-slate-200 shadow-none scale-100"
+                  )}
+                >
                   <Plus size={16} /> Nueva Solicitud
                 </AeroButton>
+              </div>
+            </div>
+
+            {/* Banner Refuerzo Comunicacional */}
+            <div className={cn(
+              "p-4 px-6 rounded-3xl mb-6 flex items-start gap-4 border transition-all duration-300",
+              isWithinAllowedTime()
+                ? "bg-blue-50/50 border-blue-100 text-blue-800"
+                : "bg-rose-50 border-rose-100 text-rose-800"
+            )}>
+              <Clock className={cn("w-5 h-5 mt-0.5 shrink-0", isWithinAllowedTime() ? "text-blue-500" : "text-rose-500")} />
+              <div>
+                <h4 className="text-sm font-black uppercase tracking-wider mb-1">
+                  Horario de Solicitudes: 07:00 a 16:00 (Hora actual: {currentChileTime})
+                </h4>
+                <p className="text-sm font-medium leading-relaxed">
+                  No se aceptan solicitudes fuera del horario establecido de 7AM a 16:00 y NO procesarán excepciones para asegurar su planificación.
+                </p>
+                {!isWithinAllowedTime() && (
+                  <p className="text-xs font-bold uppercase tracking-widest mt-2 text-rose-600 animate-pulse">
+                    Plataforma bloqueada para el ingreso de solicitudes en este momento
+                  </p>
+                )}
               </div>
             </div>
 
