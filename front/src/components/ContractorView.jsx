@@ -113,9 +113,12 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
 
   const courses = useMemo(() => {
     const allCourses = (data?.categories || []).flatMap(c => c.courses || []);
-    const userPlantIds = user.plantas?.map(p => p.niv_id) || [];
-    // Only show courses that belong to one of the user's plants (by ID)
-    return allCourses.filter(course => userPlantIds.includes(parseInt(course.niv_id, 10)));
+    const userPlantIds = user.plantas?.map(p => String(p.niv_id)) || [];
+    // Only show courses that belong to one of the user's plants (comparing as Strings safely)
+    return allCourses.filter(course => {
+      if (course.niv_id === null || course.niv_id === undefined) return false;
+      return userPlantIds.includes(String(course.niv_id));
+    });
   }, [data?.categories, user.plantas]);
 
   const availableSlots = useMemo(() => {
@@ -303,12 +306,12 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
                 </div>
                 
                 <div className="space-y-4">
-                  {myWorkers.filter(w => w.niv_id === planta.niv_id).length === 0 ? (
+                  {myWorkers.filter(w => String(w.niv_id) === String(planta.niv_id)).length === 0 ? (
                     <div className="bg-white/40 p-6 rounded-[32px] border border-dashed border-slate-200 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">
                       No hay trabajadores registrados en esta planta
                     </div>
                   ) : (
-                    myWorkers.filter(w => w.niv_id === planta.niv_id).map(w => (
+                    myWorkers.filter(w => String(w.niv_id) === String(planta.niv_id)).map(w => (
                       <div key={`${planta.niv_id}-${w.id}`} className="bg-white p-6 rounded-[32px] border border-slate-200 flex items-center justify-between shadow-sm hover:shadow-md transition-all group">
                         <div className="flex items-center gap-6">
                           <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
