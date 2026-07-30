@@ -15,21 +15,21 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Helper to check if current time is within allowed range (07:00 to 17:00 America/Santiago)
+// Helper to check if current time is within allowed range (07:00 to 16:00 America/Santiago)
 function isWithinAllowedTime() {
   try {
     const options = { timeZone: 'America/Santiago', hour12: false, hour: 'numeric', minute: 'numeric', second: 'numeric' };
     const formatter = new Intl.DateTimeFormat('en-US', options);
     const parts = formatter.formatToParts(new Date());
     const hour = parseInt(parts.find(p => p.type === 'hour').value, 10);
-    if (hour < 7 || hour >= 17) {
+    if (hour < 7 || hour >= 16) {
       return false;
     }
     return true;
   } catch (e) {
     console.error('Error checking time restrictions:', e);
     const hour = new Date().getHours();
-    if (hour < 7 || hour >= 17) {
+    if (hour < 7 || hour >= 16) {
       return false;
     }
     return true;
@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
   try {
     if (!isWithinAllowedTime()) {
       return res.status(400).json({
-        error: 'No se aceptan solicitudes fuera del horario establecido de 7AM a 17:00 y NO procesarán excepciones para asegurar su planificación.'
+        error: 'No se aceptan solicitudes fuera del horario establecido de 7AM a 16:00 y NO procesarán excepciones para asegurar su planificación.'
       });
     }
 
