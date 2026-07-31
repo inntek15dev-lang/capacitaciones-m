@@ -108,9 +108,9 @@ jobs:
               echo "Iniciando respaldo de base de datos..."
               
               # Buscar backup last-0 existente y rotarlo a last-1
-              EXISTING_LAST0=$(find "$BACKUP_DIR" -name "backup-db-capacitaciones-m-*-last-0.sql" -type f | head -n 1)
+              EXISTING_LAST0=$(find "$BACKUP_DIR" -name "backup-db-capacitaciones-m-*-last-prepro-0.sql" -type f | head -n 1)
               if [ -n "$EXISTING_LAST0" ]; then
-                NEW_LAST1="${EXISTING_LAST0/-last-0.sql/-last-1.sql}"
+                NEW_LAST1="${EXISTING_LAST0/-last-prepro-0.sql/-last-prepro-1.sql}"
                 rm -f "$NEW_LAST1"
                 mv "$EXISTING_LAST0" "$NEW_LAST1"
                 echo "Rotado respaldo anterior a: $(basename "$NEW_LAST1")"
