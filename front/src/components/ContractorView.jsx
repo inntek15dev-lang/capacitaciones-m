@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import axios from 'axios';
-import { Users, ClipboardList, LogOut, Zap, Search, Plus, CheckCircle, Calendar, Clock, Eye, XCircle, LayoutDashboard, ChevronRight, Download, Monitor, MapPin } from 'lucide-react';
+import { Users, ClipboardList, LogOut, Zap, Search, Plus, CheckCircle, Calendar, Clock, Eye, XCircle, LayoutDashboard, ChevronRight, Download, Monitor, MapPin, Filter, ChevronDown } from 'lucide-react';
 import { AeroButton, cn } from './ui/AeroUI';
 import Dashboard from './Dashboard';
 import UserInfo from './UserInfo';
@@ -69,7 +69,8 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
   const [workersLimit, setWorkersLimit] = useState(5);
   const [requestsPage, setRequestsPage] = useState(1);
   const [requestsLimit, setRequestsLimit] = useState(5);
-  const [showEvaluatedOnly, setShowEvaluatedOnly] = useState(false);
+  const [statusFilter, setStatusFilter] = useState(['pending', 'approved', 'evaluated', 'rejected']);
+  const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
   const [plantWorkers, setPlantWorkers] = useState([]);
   const [fetchingWorkers, setFetchingWorkers] = useState(false);
 
@@ -142,19 +143,28 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
 
   const totalWorkersPages = Math.ceil(myWorkers.length / workersLimit);
 
-  const totalRequestsPages = Math.ceil(myRequests.length / requestsLimit);
+  // Helper: compute effective status including 'evaluated' for approved+all-evaluated requests
+  const getEffectiveStatus = (r) => {
+    if (r.status === 'approved') {
+      const slot = (data?.schedules?.[r.courseId] || []).find(s => s.id === r.slotId);
+      const reqIds = (r.workerIds || []).map(w => typeof w === 'object' ? w.id : w);
+      const enrolledWorkers = slot?.enrolled?.filter(e => reqIds.includes(e.id)) || [];
+      if (enrolledWorkers.length > 0 && enrolledWorkers.every(e => e.evaluation !== 'pending')) {
+        return 'evaluated';
+      }
+    }
+    return r.status;
+  };
 
   const filteredRequests = useMemo(() => {
+    if (statusFilter.length === 0) return myRequests;
     return myRequests.filter(r => {
-      if (showEvaluatedOnly) {
-        const slot = (data?.schedules?.[r.courseId] || []).find(s => s.id === r.slotId);
-        const reqIds = (r.workerIds || []).map(w => typeof w === 'object' ? w.id : w);
-        const isEval = r.status === 'approved' && slot?.enrolled.filter(e => reqIds.includes(e.id)).every(e => e.evaluation !== 'pending');
-        if (!isEval) return false;
-      }
-      return true;
+      const effective = getEffectiveStatus(r);
+      return statusFilter.includes(effective);
     });
-  }, [myRequests, showEvaluatedOnly, data?.schedules]);
+  }, [myRequests, statusFilter, data?.schedules]);
+
+  const totalRequestsPages = Math.ceil(filteredRequests.length / requestsLimit);
 
   const paginatedRequests = useMemo(() => {
     const start = (requestsPage - 1) * requestsLimit;
@@ -412,17 +422,88 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
               </div>
               
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3 bg-white p-2 px-4 rounded-2xl border border-slate-200">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Solo Evaluadas</span>
+                {/* Status Filter Dropdown */}
+                <div className="relative">
                   <button 
-                    onClick={() => { setShowEvaluatedOnly(!showEvaluatedOnly); setRequestsPage(1); }}
+                    onClick={() => setIsStatusFilterOpen(!isStatusFilterOpen)}
                     className={cn(
-                      "w-10 h-5 rounded-full p-0.5 transition-all flex items-center",
-                      showEvaluatedOnly ? "bg-emerald-500 justify-end" : "bg-slate-200 justify-start"
+                      "flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-xs font-bold transition-all",
+                      statusFilter.length < 4
+                        ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                        : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
                     )}
                   >
-                    <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
+                    <Filter size={14} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      {statusFilter.length === 4 ? 'Todos los Estados' : `${statusFilter.length} Estado${statusFilter.length !== 1 ? 's' : ''}`}
+                    </span>
+                    <ChevronDown size={12} className={cn("transition-transform", isStatusFilterOpen && "rotate-180")} />
                   </button>
+                  
+                  {isStatusFilterOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsStatusFilterOpen(false)} />
+                      <div className="absolute right-0 top-full mt-2 z-50 bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 p-3 min-w-[220px] animate-in fade-in zoom-in-95 duration-150">
+                        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Filtrar por Estado</div>
+                        {(() => {
+                          const STATUS_OPTIONS = [
+                            { key: 'pending', label: 'Pendiente', activeBg: 'bg-amber-500 border-amber-500', dot: 'bg-amber-400' },
+                            { key: 'approved', label: 'Aprobada', activeBg: 'bg-emerald-500 border-emerald-500', dot: 'bg-emerald-400' },
+                            { key: 'evaluated', label: 'Evaluada', activeBg: 'bg-blue-500 border-blue-500', dot: 'bg-blue-400' },
+                            { key: 'rejected', label: 'Rechazada', activeBg: 'bg-red-500 border-red-500', dot: 'bg-red-400' },
+                          ];
+                          return STATUS_OPTIONS.map(opt => {
+                            const isActive = statusFilter.includes(opt.key);
+                            return (
+                              <button
+                                key={opt.key}
+                                onClick={() => {
+                                  setStatusFilter(prev => 
+                                    isActive 
+                                      ? prev.filter(s => s !== opt.key)
+                                      : [...prev, opt.key]
+                                  );
+                                  setRequestsPage(1);
+                                }}
+                                className={cn(
+                                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all mb-1",
+                                  isActive ? "bg-slate-50" : "hover:bg-slate-50/50"
+                                )}
+                              >
+                                <div className={cn(
+                                  "w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all",
+                                  isActive ? opt.activeBg : "border-slate-200"
+                                )}>
+                                  {isActive && <CheckCircle size={12} className="text-white" />}
+                                </div>
+                                <span className={cn(
+                                  "text-xs font-bold",
+                                  isActive ? "text-slate-800" : "text-slate-400"
+                                )}>
+                                  {opt.label}
+                                </span>
+                                <div className={cn("ml-auto w-2 h-2 rounded-full", opt.dot)} />
+                              </button>
+                            );
+                          });
+                        })()}
+                        <div className="border-t border-slate-100 mt-1 pt-2 flex gap-2">
+                          <button 
+                            onClick={() => { setStatusFilter(['pending', 'approved', 'evaluated', 'rejected']); setRequestsPage(1); }}
+                            className="flex-1 text-[9px] font-black text-emerald-600 uppercase tracking-widest py-1.5 rounded-lg hover:bg-emerald-50 transition-all"
+                          >
+                            Todos
+                          </button>
+                          <button 
+                            onClick={() => { setStatusFilter([]); setRequestsPage(1); }}
+                            className="flex-1 text-[9px] font-black text-slate-400 uppercase tracking-widest py-1.5 rounded-lg hover:bg-slate-50 transition-all"
+                          >
+                            Ninguno
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <AeroButton 
@@ -469,7 +550,7 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
             </div>
 
             <div className="space-y-4">
-              {myRequests.length === 0 ? (
+              {filteredRequests.length === 0 ? (
                 <div className="bg-white p-12 rounded-[40px] border-2 border-dashed border-slate-200 flex flex-col items-center text-center">
                   <div className="w-16 h-16 rounded-3xl bg-slate-50 flex items-center justify-center text-slate-300 mb-4">
                     <ClipboardList size={32} />
@@ -485,8 +566,9 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
                         <div className="flex items-center gap-4">
                             <div className={cn(
                                 "w-12 h-12 rounded-2xl flex items-center justify-center",
-                                req.status === 'pending' ? "bg-amber-50 text-amber-600" : 
-                                req.status === 'approved' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                                getEffectiveStatus(req) === 'pending' ? "bg-amber-50 text-amber-600" : 
+                                getEffectiveStatus(req) === 'evaluated' ? "bg-blue-50 text-blue-600" :
+                                getEffectiveStatus(req) === 'approved' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
                             )}>
                                 <CheckCircle size={24} />
                             </div>
@@ -522,10 +604,11 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
                       <div className="flex items-center gap-4">
                         <div className={cn(
                             "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest",
-                            req.status === 'pending' ? "bg-amber-50 text-amber-600" : 
-                            req.status === 'approved' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                            getEffectiveStatus(req) === 'pending' ? "bg-amber-50 text-amber-600" : 
+                            getEffectiveStatus(req) === 'evaluated' ? "bg-blue-50 text-blue-600" :
+                            getEffectiveStatus(req) === 'approved' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
                         )}>
-                            {req.status === 'pending' ? 'Pendiente' : req.status === 'approved' ? 'Aprobada' : 'Rechazada'}
+                            {getEffectiveStatus(req) === 'pending' ? 'Pendiente' : getEffectiveStatus(req) === 'evaluated' ? 'Evaluada' : getEffectiveStatus(req) === 'approved' ? 'Aprobada' : 'Rechazada'}
                         </div>
                         <button 
                             onClick={() => setSelectedRequest(req)}
@@ -541,7 +624,7 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
             </div>
 
             {/* Requests Pagination */}
-            {myRequests.length > 0 && (
+            {filteredRequests.length > 0 && (
               <div className="mt-8 flex items-center justify-between bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
                 <div className="flex items-center gap-4">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mostrar</span>
