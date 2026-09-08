@@ -23,6 +23,7 @@ services:
     container_name: capacitaciones-m-api
     restart: always
     environment:
+      - APP_ENV=prod
       - NODE_ENV=${NODE_ENV}
       - DB_HOST=${DB_HOST}
       - DB_USER=${DB_USER}
@@ -51,6 +52,8 @@ services:
     container_name: capacitaciones-m-front
     restart: always
     environment:
+      - APP_ENV=prod
+      - VITE_APP_ENV=prod
       - VITE_API_URL=https://capacitaciones-m-api.ovalcontrol.com/api/v1
     ports:
       - "127.0.0.1:8051:80"

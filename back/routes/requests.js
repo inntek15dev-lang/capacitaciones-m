@@ -19,20 +19,31 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Helper to check if current time is within allowed range (07:00 to 16:00 America/Santiago)
+function getMaxAllowedHour() {
+  const env = (process.env.APP_ENV || process.env.VITE_APP_ENV || '').toLowerCase();
+  const frontUrl = (process.env.FRONT_URL || '').toLowerCase();
+  const port = String(process.env.PORT || '');
+  if (env === 'prepro' || env === 'preprod' || frontUrl.includes('prepro') || port === '4050') {
+    return 18;
+  }
+  return 16;
+}
+
+// Helper to check if current time is within allowed range (07:00 to 16:00 or 18:00 America/Santiago)
 function isWithinAllowedTime() {
+  const maxHour = getMaxAllowedHour();
   try {
     const options = { timeZone: 'America/Santiago', hour12: false, hour: 'numeric', minute: 'numeric', second: 'numeric' };
     const formatter = new Intl.DateTimeFormat('en-US', options);
     const parts = formatter.formatToParts(new Date());
     const hour = parseInt(parts.find(p => p.type === 'hour').value, 10);
-    if (hour < 7 || hour >= 16) {
+    if (hour < 7 || hour >= maxHour) {
       return false;
     }
     return true;
   } catch (e) {
     const hour = new Date().getHours();
-    if (hour < 7 || hour >= 16) {
+    if (hour < 7 || hour >= maxHour) {
       return false;
     }
     return true;
@@ -43,8 +54,9 @@ function isWithinAllowedTime() {
 router.post('/', async (req, res) => {
   try {
     if (!isWithinAllowedTime()) {
+      const maxHour = getMaxAllowedHour();
       return res.status(400).json({
-        error: 'No se aceptan solicitudes fuera del horario establecido de 7AM a 16:00 y NO procesarán excepciones para asegurar su planificación.'
+        error: `No se aceptan solicitudes fuera del horario establecido de 7AM a ${maxHour}:00 y NO procesarán excepciones para asegurar su planificación.`
       });
     }
 

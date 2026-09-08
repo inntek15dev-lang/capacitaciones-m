@@ -23,6 +23,7 @@ services:
     container_name: prepro-capacitaciones-m-api
     restart: always
     environment:
+      - APP_ENV=prepro
       - NODE_ENV=${NODE_ENV}
       - DB_HOST=${DB_HOST}
       - DB_USER=${DB_USER}
@@ -51,6 +52,8 @@ services:
     container_name: prepro-capacitaciones-m-front
     restart: always
     environment:
+      - APP_ENV=prepro
+      - VITE_APP_ENV=prepro
       - VITE_API_URL=https://prepro-capacitaciones-m-api.ovalcontrol.com/api/v1
     ports:
       - "127.0.0.1:8050:80"

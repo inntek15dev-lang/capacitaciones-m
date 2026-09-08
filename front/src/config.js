@@ -5,7 +5,10 @@
 const config = {
     API_BASE: (window._env_ && window._env_.VITE_API_URL)
         ? window._env_.VITE_API_URL
-        : (import.meta.env.VITE_API_URL || '')
+        : (import.meta.env.VITE_API_URL || ''),
+    APP_ENV: (window._env_ && window._env_.VITE_APP_ENV)
+        ? window._env_.VITE_APP_ENV
+        : (import.meta.env.VITE_APP_ENV || '')
 };
 
 export default config;

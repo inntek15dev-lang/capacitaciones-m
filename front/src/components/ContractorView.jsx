@@ -9,19 +9,30 @@ import { downloadCertificate } from '../utils/pdfGenerator';
 
 const API_BASE = config.API_BASE;
 
+function getMaxAllowedHour() {
+  const appEnv = (config.APP_ENV || import.meta.env.VITE_APP_ENV || '').toLowerCase();
+  const apiBase = (config.API_BASE || import.meta.env.VITE_API_URL || '').toLowerCase();
+  const isPreproDomain = typeof window !== 'undefined' && window.location.hostname.includes('prepro');
+  if (appEnv === 'prepro' || appEnv === 'preprod' || apiBase.includes('prepro') || isPreproDomain) {
+    return 18;
+  }
+  return 16;
+}
+
 function isWithinAllowedTime() {
+  const maxHour = getMaxAllowedHour();
   try {
     const options = { timeZone: 'America/Santiago', hour12: false, hour: 'numeric', minute: 'numeric', second: 'numeric' };
     const formatter = new Intl.DateTimeFormat('en-US', options);
     const parts = formatter.formatToParts(new Date());
     const hour = parseInt(parts.find(p => p.type === 'hour').value, 10);
-    if (hour < 7 || hour >= 16) {
+    if (hour < 7 || hour >= maxHour) {
       return false;
     }
     return true;
   } catch (e) {
     const hour = new Date().getHours();
-    if (hour < 7 || hour >= 16) {
+    if (hour < 7 || hour >= maxHour) {
       return false;
     }
     return true;
@@ -552,7 +563,7 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
                 <AeroButton 
                   onClick={() => {
                     if (!isWithinAllowedTime()) {
-                      alert("No se aceptan solicitudes fuera del horario establecido de 7AM a 16:00 y NO procesarán excepciones para asegurar su planificación.");
+                      alert(`No se aceptan solicitudes fuera del horario establecido de 7AM a ${getMaxAllowedHour()}:00 y NO procesarán excepciones para asegurar su planificación.`);
                       return;
                     }
                     setIsRequestModalOpen(true);
@@ -579,10 +590,10 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
               <Clock className={cn("w-5 h-5 mt-0.5 shrink-0", isWithinAllowedTime() ? "text-blue-500" : "text-rose-500")} />
               <div>
                 <h4 className="text-sm font-black uppercase tracking-wider mb-1">
-                  Horario de Solicitudes: 07:00 a 16:00 (Hora actual: {currentChileTime})
+                  Horario de Solicitudes: 07:00 a {getMaxAllowedHour()}:00 (Hora actual: {currentChileTime})
                 </h4>
                 <p className="text-sm font-medium leading-relaxed">
-                  No se aceptan solicitudes fuera del horario establecido de 7AM a 16:00 y NO procesarán excepciones para asegurar su planificación.
+                  No se aceptan solicitudes fuera del horario establecido de 7AM a {getMaxAllowedHour()}:00 y NO procesarán excepciones para asegurar su planificación.
                 </p>
                 {!isWithinAllowedTime() && (
                   <p className="text-xs font-bold uppercase tracking-widest mt-2 text-rose-600 animate-pulse">
