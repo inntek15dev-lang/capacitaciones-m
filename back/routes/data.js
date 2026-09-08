@@ -15,7 +15,8 @@ router.get('/', async (req, res) => {
     });
 
     const slots = await ScheduleSlot.findAll({
-      include: [{ model: Enrollment, as: 'enrollments' }]
+      include: [{ model: Enrollment, as: 'enrollments' }],
+      order: [['date', 'DESC'], ['start', 'DESC']]
     });
 
     // Map schedules back to the course-indexed format expected by frontend
@@ -40,7 +41,9 @@ router.get('/', async (req, res) => {
     });
 
     const users = await User.findAll();
-    const requests = await Request.findAll();
+    const requests = await Request.findAll({
+      order: [['createdAt', 'DESC'], ['id', 'DESC']]
+    });
 
     res.json({
       categories,

@@ -25,6 +25,7 @@ This file outlines the database schema and models managed by Sequelize in the ba
 - `adminEmail` (STRING, Nullable): Email of the admin who scheduled it (passed from the frontend user session).
 - `modality` (STRING, Default: 'presencial'): Modality of the session ('online' or 'presencial').
 - `courseId` (STRING, Foreign Key): References `Course(id)`.
+- Default query order: `[['date', 'DESC'], ['start', 'DESC']]`. In Contractor view, slots with `date < todayStr` (Chile timezone) are filtered out, preserving current and future date slots. In Admin view, `SchedulingView` and `AgendaPanel` position automatically on the current Chile date.
 
 ### Enrollment
 - `id` (INTEGER, Primary Key, Auto-Increment)
@@ -34,7 +35,7 @@ This file outlines the database schema and models managed by Sequelize in the ba
 - `workerRut` (STRING): RUT of the worker.
 - `workerCargo` (STRING): Job position of the worker.
 - `contractor` (STRING): Contractor name.
-- `evaluation` (ENUM('pending', 'passed', 'failed'), Default: 'pending'): Worker evaluation status.
+- `evaluation` (ENUM('pending', 'passed', 'failed'), Default: 'pending'): Worker evaluation status. Evaluation notifications send human-readable emails with dates in full Spanish format (e.g. 'Lunes 1 de Enero de 2026') pointing to `?tab=requests&status=evaluated`.
 
 ### Request
 - `id` (STRING, Primary Key): Request identifier.
@@ -47,6 +48,7 @@ This file outlines the database schema and models managed by Sequelize in the ba
 - `contractorEmail` (STRING, Nullable): Email address of the contractor.
 - `workerIds` (JSON): List of worker IDs and metadata requesting enrollment.
 - `data` (JSON): Flex fields.
+- Default query order: `[['createdAt', 'DESC'], ['id', 'DESC']]`. Across Contractor and Admin modules, requests are displayed in descending order from newest to oldest.
 
 ### User
 - `id` (STRING, Primary Key): User identifier.

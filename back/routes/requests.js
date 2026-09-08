@@ -3,12 +3,16 @@ const router = express.Router();
 const Request = require('../models/Request');
 const ScheduleSlot = require('../models/ScheduleSlot');
 const Enrollment = require('../models/Enrollment');
+const Course = require('../models/Course');
 const { sendEmail } = require('../utils/mailer');
+const { formatSpanishFullDate } = require('../utils/dateFormatter');
 
 // Get requests
 router.get('/', async (req, res) => {
   try {
-    const requests = await Request.findAll();
+    const requests = await Request.findAll({
+      order: [['createdAt', 'DESC'], ['id', 'DESC']]
+    });
     res.json(requests);
   } catch (err) {
     res.status(500).json({ error: 'Failed to read requests' });
@@ -70,12 +74,46 @@ router.post('/', async (req, res) => {
     // SEND EMAIL ALERT TO ADMIN
     const emailTo = process.env.NODE_ENV === 'preproduction' ? 'psolis@inntek.cl' : slot.adminEmail;
     if (emailTo) {
-      const subject = `Solicitud de Enrolamiento para Charla`;
+      const slotCourse = await Course.findByPk(courseId);
+      const courseName = slotCourse?.name || 'Charla de Capacitación';
+      const slotDate = formatSpanishFullDate(slot.date);
+      const slotTime = (slot.start && slot.end) ? `${slot.start} - ${slot.end}` : (slot.start || 'Horario programado');
+      const modality = slot.modality ? slot.modality.toUpperCase() : 'PRESENCIAL';
+
+      const baseUrl = process.env.FRONT_URL ? process.env.FRONT_URL.split(',')[0].trim() : 'http://localhost:5173';
+      const directAdminUrl = `${baseUrl}?tab=requests&status=pending`;
+
+      const subject = `Nueva Solicitud de Enrolamiento - ${courseName}`;
       const htmlContent = `
-        <h3>Nueva Solicitud de Enrolamiento</h3>
-        <p>Se ha generado una nueva solicitud de enrolamiento por parte del contratista <b>${contractorName}</b>.</p>
-        <p><b>Horario (Slot ID):</b> ${slotId}</p>
-        <p>Por favor revise y apruebe/rechace la solicitud en la plataforma.</p>
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
+          <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 24px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h2 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Capacitaciones Molycop</h2>
+            <p style="color: #38bdf8; margin: 6px 0 0 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Nueva Solicitud de Enrolamiento</p>
+          </div>
+          
+          <div style="padding: 24px; color: #334155; line-height: 1.6;">
+            <h3 style="color: #0f172a; font-size: 16px; margin-top: 0;">Solicitud de Enrolamiento Recibida</h3>
+            <p style="font-size: 14px;">El contratista <b>${contractorName}</b> ha generado una nueva solicitud de enrolamiento para la siguiente actividad:</p>
+            
+            <div style="background-color: #f8fafc; border-left: 4px solid #3b82f6; padding: 14px 18px; margin: 18px 0; border-radius: 6px;">
+              <p style="margin: 0 0 6px 0; font-size: 13px; color: #334155;"><b>Curso / Charla:</b> ${courseName}</p>
+              <p style="margin: 0 0 6px 0; font-size: 13px; color: #334155;"><b>Fecha de Sesión:</b> ${slotDate}</p>
+              <p style="margin: 0 0 6px 0; font-size: 13px; color: #334155;"><b>Horario:</b> ${slotTime}</p>
+              <p style="margin: 0 0 6px 0; font-size: 13px; color: #334155;"><b>Modalidad:</b> ${modality}</p>
+              <p style="margin: 0; font-size: 13px; color: #334155;"><b>Trabajadores Solicitados:</b> ${workerArray.length}</p>
+            </div>
+
+            <div style="text-align: center; margin: 28px 0;">
+              <a href="${directAdminUrl}" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 12px; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);">
+                Ver Solicitudes Pendientes en la Plataforma
+              </a>
+            </div>
+            
+            <p style="font-size: 11px; color: #94a3b8; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px; text-align: center;">
+              Mensaje automático generado por la plataforma Capacitaciones Molycop. Por favor no responda a este correo.
+            </p>
+          </div>
+        </div>
       `;
       await sendEmail(emailTo, subject, htmlContent);
     } else {
@@ -152,11 +190,52 @@ router.put('/:id', async (req, res) => {
     // SEND EMAIL ALERT
     const emailTo = process.env.NODE_ENV === 'preproduction' ? 'ipardo@inntek.cl' : request.contractorEmail;
     if (emailTo) {
+      const targetSlot = await ScheduleSlot.findByPk(request.slotId, {
+        include: [{ model: Course }]
+      });
+      const courseName = targetSlot?.Course?.name || 'Charla de Capacitación';
+      const slotDate = formatSpanishFullDate(targetSlot?.date);
+      const slotTime = (targetSlot?.start && targetSlot?.end) ? `${targetSlot.start} - ${targetSlot.end}` : (targetSlot?.start || 'Horario programado');
+      const modality = targetSlot?.modality ? targetSlot.modality.toUpperCase() : 'PRESENCIAL';
+
       const statusText = status === 'approved' ? 'Aprobada' : 'Rechazada';
-      const subject = `Solicitud de Enrolamiento ${statusText}`;
+      const statusColor = status === 'approved' ? '#059669' : '#dc2626';
+      const statusBg = status === 'approved' ? '#f0fdf4' : '#fef2f2';
+      const statusBorder = status === 'approved' ? '#10b981' : '#ef4444';
+
+      const baseUrl = process.env.FRONT_URL ? process.env.FRONT_URL.split(',')[0].trim() : 'http://localhost:5173';
+      const directContractorUrl = `${baseUrl}?tab=requests&status=${status}`;
+
+      const subject = `Solicitud de Enrolamiento ${statusText} - ${courseName}`;
       const htmlContent = `
-        <h3>Solicitud de Enrolamiento ${statusText}</h3>
-        <p>Su solicitud para la charla en el horario <b>${request.slotId}</b> ha sido <b>${statusText}</b> por el administrador.</p>
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
+          <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 24px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h2 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Capacitaciones Molycop</h2>
+            <p style="color: #38bdf8; margin: 6px 0 0 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Respuesta a Solicitud de Enrolamiento</p>
+          </div>
+          
+          <div style="padding: 24px; color: #334155; line-height: 1.6;">
+            <h3 style="color: #0f172a; font-size: 16px; margin-top: 0;">Estado de Solicitud: <span style="color: ${statusColor};">${statusText}</span></h3>
+            <p style="font-size: 14px;">Estimado contratista <b>${request.contractorName}</b>, su solicitud ha sido <b>${statusText.toLowerCase()}</b> por el administrador.</p>
+            
+            <div style="background-color: ${statusBg}; border-left: 4px solid ${statusBorder}; padding: 14px 18px; margin: 18px 0; border-radius: 6px;">
+              <p style="margin: 0 0 6px 0; font-size: 13px; color: #334155;"><b>Curso / Charla:</b> ${courseName}</p>
+              <p style="margin: 0 0 6px 0; font-size: 13px; color: #334155;"><b>Fecha de Sesión:</b> ${slotDate}</p>
+              <p style="margin: 0 0 6px 0; font-size: 13px; color: #334155;"><b>Horario:</b> ${slotTime}</p>
+              <p style="margin: 0; font-size: 13px; color: #334155;"><b>Modalidad:</b> ${modality}</p>
+            </div>
+
+            <div style="text-align: center; margin: 28px 0;">
+              <a href="${directContractorUrl}" style="background-color: ${statusColor}; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 12px; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+                Ver Mis Solicitudes ${statusText}s en la Plataforma
+              </a>
+            </div>
+            
+            <p style="font-size: 11px; color: #94a3b8; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px; text-align: center;">
+              Mensaje automático generado por la plataforma Capacitaciones Molycop. Por favor no responda a este correo.
+            </p>
+          </div>
+        </div>
       `;
       await sendEmail(emailTo, subject, htmlContent);
     } else {

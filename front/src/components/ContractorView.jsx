@@ -43,6 +43,20 @@ function getChileTime() {
   }
 }
 
+function getChileTodayString() {
+  try {
+    const options = { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit' };
+    const formatter = new Intl.DateTimeFormat('en-CA', options);
+    return formatter.format(new Date());
+  } catch (e) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+}
+
 export default function ContractorView({ user, data, onLogout, onRefresh }) {
   const [currentChileTime, setCurrentChileTime] = useState(getChileTime());
 
@@ -53,7 +67,16 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
     return () => clearInterval(interval);
   }, []);
 
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'workers' | 'requests'
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'requests' || params.get('status') === 'evaluated' || params.get('filter') === 'evaluated') {
+        return 'requests';
+      }
+    } catch (e) {}
+    return 'dashboard';
+  }); // 'dashboard' | 'workers' | 'requests'
+
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [requestForm, setRequestForm] = useState({
@@ -68,7 +91,16 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
   const [workersLimit, setWorkersLimit] = useState(5);
   const [requestsPage, setRequestsPage] = useState(1);
   const [requestsLimit, setRequestsLimit] = useState(5);
-  const [statusFilter, setStatusFilter] = useState(['pending', 'approved', 'evaluated', 'rejected']);
+  const [statusFilter, setStatusFilter] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const st = params.get('status') || params.get('filter');
+      if (st && ['pending', 'approved', 'evaluated', 'rejected'].includes(st)) {
+        return [st];
+      }
+    } catch (e) {}
+    return ['pending', 'approved', 'evaluated', 'rejected'];
+  });
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
   const [plantWorkers, setPlantWorkers] = useState([]);
   const [fetchingWorkers, setFetchingWorkers] = useState(false);
@@ -121,7 +153,11 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
 
   const availableSlots = useMemo(() => {
     if (!requestForm.courseId) return [];
-    return data?.schedules?.[requestForm.courseId] || [];
+    const todayStr = getChileTodayString();
+    const rawSlots = data?.schedules?.[requestForm.courseId] || [];
+    return rawSlots
+      .filter(s => s.date && s.date >= todayStr)
+      .sort((a, b) => b.date.localeCompare(a.date) || (b.start || '').localeCompare(a.start || ''));
   }, [data?.schedules, requestForm.courseId]);
 
   const selectedSlotData = useMemo(() => {
@@ -129,7 +165,13 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
   }, [availableSlots, requestForm.slotId]);
 
   const myRequests = useMemo(() => {
-    return (data?.requests || []).filter(r => r.contractorId === user.id);
+    const userReqs = (data?.requests || []).filter(r => r.contractorId === user.id);
+    return userReqs.slice().sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (dateB !== dateA) return dateB - dateA;
+      return (b.id || '').localeCompare(a.id || '');
+    });
   }, [data?.requests, user.id]);
 
   // Paginated Data
@@ -826,7 +868,9 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
                     onChange={e => setRequestForm({...requestForm, slotId: e.target.value, workerIds: []})}
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50 transition-all appearance-none disabled:opacity-50"
                     >
-                    <option value="" disabled>Seleccione horario...</option>
+                    <option value="" disabled>
+                      {availableSlots.length === 0 ? "No hay horarios vigentes disponibles" : "Seleccione horario..."}
+                    </option>
                     {availableSlots.map(s => (
                         <option key={s.id} value={s.id}>
                           {s.date} ({s.start} - {s.end}) • {s.modality?.toUpperCase() || 'PRESENCIAL'} • Cupos: {s.max - s.enrolled.length}

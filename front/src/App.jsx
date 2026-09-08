@@ -15,11 +15,18 @@ import { AeroButton, cn } from './components/ui/AeroUI';
 import config from './config';
 
 const API_BASE = config.API_BASE;
-
 import { decryptDataString } from './utils/crypto';
 
 export default function App() {
-  const [activeModule, setActiveModule] = useState('dashboard'); // 'dashboard' | 'scheduling' | 'charlas' | 'requests'
+  const [activeModule, setActiveModule] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'requests' || params.get('module') === 'requests' || params.get('status') === 'pending') {
+        return 'requests';
+      }
+    } catch(e) {}
+    return 'dashboard';
+  }); // 'dashboard' | 'scheduling' | 'charlas' | 'requests'
   const [data, setData] = useState({ categories: [], workers: [], schedules: {}, users: [], requests: [] });
   const [user, setUser] = useState(() => {
     // Check URL parameters or Path for automated login (Bypass Login)

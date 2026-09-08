@@ -4,7 +4,19 @@ import { GlassCard, AeroButton, cn } from './ui/AeroUI';
 
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const DSHORT = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-const TODAY = "2026-04-02";
+function getChileTodayStr() {
+  try {
+    const options = { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit' };
+    const formatter = new Intl.DateTimeFormat('en-CA', options);
+    return formatter.format(new Date());
+  } catch (e) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+}
 
 const fmtD = s => s ? s.split("-").reverse().join("/") : "—";
 const tds = (y,m,d) => `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
@@ -98,8 +110,11 @@ export default function SchedulingView({ course, schedules, onAddSlot, onDeleteS
   React.useMemo(() => {
   }, [schedules]);
 
-  const [year, setYear] = useState(2026);
-  const [month, setMonth] = useState(3);
+  const todayStr = getChileTodayStr();
+  const [initYear, initMonthStr] = todayStr.split('-').map(Number);
+
+  const [year, setYear] = useState(initYear);
+  const [month, setMonth] = useState(initMonthStr - 1);
   const [modal, setModal] = useState(null);
 
   const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
@@ -148,8 +163,8 @@ export default function SchedulingView({ course, schedules, onAddSlot, onDeleteS
                 const d = i + 1;
                 const date = tds(year, month, d);
                 const daySlots = schedules.filter(s => s.date === date);
-                const isToday = date === TODAY;
-                const past = date < TODAY;
+                const isToday = date === todayStr;
+                const past = date < todayStr;
 
                 return (
                   <div 

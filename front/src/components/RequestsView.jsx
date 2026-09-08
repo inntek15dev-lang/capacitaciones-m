@@ -15,7 +15,16 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isEvaluationModalOpen, setIsEvaluationModalOpen] = useState(false);
   const [evaluationData, setEvaluationData] = useState([]); // { workerId, status }
-  const [filter, setFilter] = useState('pending'); // 'pending' | 'approved' | 'rejected' | 'all'
+  const [filter, setFilter] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const statusParam = params.get('status') || params.get('filter');
+      if (statusParam && ['pending', 'approved', 'rejected', 'all'].includes(statusParam)) {
+        return statusParam;
+      }
+    } catch(e) {}
+    return 'pending';
+  }); // 'pending' | 'approved' | 'rejected' | 'all'
   const [showEvaluatedOnly, setShowEvaluatedOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -35,7 +44,7 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
   }, [data.categories]);
 
   const filteredRequests = useMemo(() => {
-    return requests.filter(r => {
+    const list = requests.filter(r => {
       // If toggle is ON, only show evaluated
       if (showEvaluatedOnly) {
         const slot = (data.schedules[r.courseId] || []).find(s => s.id === r.slotId);
@@ -46,6 +55,13 @@ export default function RequestsView({ requests, data, onRefresh, showToast }) {
 
       // Usual filter logic
       return filter === 'all' ? true : r.status === filter;
+    });
+
+    return list.slice().sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (dateB !== dateA) return dateB - dateA;
+      return (b.id || '').localeCompare(a.id || '');
     });
   }, [requests, filter, showEvaluatedOnly, data.schedules]);
 

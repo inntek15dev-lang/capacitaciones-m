@@ -4,7 +4,19 @@ import { GlassCard, cn } from './ui/AeroUI';
 
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const DMINI = ["D","L","M","X","J","V","S"];
-const TODAY = "2026-04-02";
+function getChileTodayStr() {
+  try {
+    const options = { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit' };
+    const formatter = new Intl.DateTimeFormat('en-CA', options);
+    return formatter.format(new Date());
+  } catch (e) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+}
 
 // Helper for date formatting
 const fmtD = s => s ? s.split("-").reverse().join("/") : "—";
@@ -49,8 +61,11 @@ function SlotCard({ slot, isActive, onSelect, compact = false }) {
 
 // Sub-component: Monthly View
 function MonthPicker({ slots, selectedSlot, onSelectSlot }) {
-  const [year, setYear] = useState(2026);
-  const [month, setMonth] = useState(3); // April
+  const todayStr = getChileTodayStr();
+  const [initYear, initMonthStr] = todayStr.split('-').map(Number);
+
+  const [year, setYear] = useState(initYear);
+  const [month, setMonth] = useState(initMonthStr - 1);
   const [pickedDay, setPickedDay] = useState(null);
 
   const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
@@ -77,7 +92,7 @@ function MonthPicker({ slots, selectedSlot, onSelectSlot }) {
           const d = i + 1;
           const date = tds(year, month, d);
           const hasSlots = (byDate[date] || []).length > 0;
-          const isToday = date === TODAY;
+          const isToday = date === todayStr;
           const isSelected = pickedDay === date;
 
           return (

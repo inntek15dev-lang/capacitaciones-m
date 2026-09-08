@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const ScheduleSlot = require('../models/ScheduleSlot');
 const Enrollment = require('../models/Enrollment');
+const Course = require('../models/Course');
 const { sendEmail } = require('../utils/mailer');
+const { formatSpanishFullDate } = require('../utils/dateFormatter');
 
 // Update schedules (Create/Update slot)
 router.post('/schedules', async (req, res) => {
@@ -119,17 +121,65 @@ router.post('/enrollments/evaluation', async (req, res) => {
       }
     }
 
+    // Fetch slot & course details for human-readable email without raw IDs
+    const slotObj = await ScheduleSlot.findByPk(slotId, {
+      include: [{ model: Course }]
+    });
+
+    const courseName = slotObj?.Course?.name || 'Charla de Capacitación';
+    const slotDate = formatSpanishFullDate(slotObj?.date);
+    const slotTime = (slotObj?.start && slotObj?.end) ? `${slotObj.start} - ${slotObj.end}` : (slotObj?.start || 'Horario programado');
+    const modality = slotObj?.modality ? slotObj.modality.toUpperCase() : 'PRESENCIAL';
+
+    // Direct portal URL pre-filtered to Evaluated Requests
+    const baseUrl = process.env.FRONT_URL ? process.env.FRONT_URL.split(',')[0].trim() : 'http://localhost:5173';
+    const directPortalUrl = `${baseUrl}?tab=requests&status=evaluated`;
+
     // Send email to each distinct contractor email
     const emailsToNotify = process.env.NODE_ENV === 'preproduction' 
       ? ['ipardo@inntek.cl'] 
       : Object.keys(contractorMap);
       
-    const subject = `Evaluación de Charla Completada`;
+    const subject = `Evaluación de Charla Completada - ${courseName}`;
     for (const cEmail of emailsToNotify) {
       const htmlContent = `
-        <h3>Evaluación de Charla</h3>
-        <p>Se han evaluado los trabajadores de la Charla asociada al horario <b>${slotId}</b>.</p>
-        <p>Los certificados correspondientes ya se encuentran disponibles para su descarga en la plataforma.</p>
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
+          <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 24px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h2 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Capacitaciones Molycop</h2>
+            <p style="color: #38bdf8; margin: 6px 0 0 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Notificación de Evaluación de Charla</p>
+          </div>
+          
+          <div style="padding: 24px; color: #334155; line-height: 1.6;">
+            <h3 style="color: #0f172a; font-size: 16px; margin-top: 0;">¡Evaluación de Charla Completada!</h3>
+            <p style="font-size: 14px;">Se ha registrado el resultado de las evaluaciones para la siguiente actividad de capacitación:</p>
+            
+            <div style="background-color: #f8fafc; border-left: 4px solid #10b981; padding: 14px 18px; margin: 18px 0; border-radius: 6px;">
+              <p style="margin: 0 0 6px 0; font-size: 13px; color: #334155;"><b>Curso / Charla:</b> ${courseName}</p>
+              <p style="margin: 0 0 6px 0; font-size: 13px; color: #334155;"><b>Fecha de Sesión:</b> ${slotDate}</p>
+              <p style="margin: 0 0 6px 0; font-size: 13px; color: #334155;"><b>Horario:</b> ${slotTime}</p>
+              <p style="margin: 0; font-size: 13px; color: #334155;"><b>Modalidad:</b> ${modality}</p>
+            </div>
+
+            <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 18px; border-radius: 12px; margin: 20px 0;">
+              <h4 style="color: #166534; margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">📋 Pasos para Descargar Certificados:</h4>
+              <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #15803d; line-height: 1.8;">
+                <li>Haga clic en el botón a continuación para ingresar directamente al portal con las <b>Solicitudes Evaluadas</b> seleccionadas.</li>
+                <li>En el listado, ubique la solicitud deseada y haga clic en el botón 👁️ <b>(Ver Detalle)</b>.</li>
+                <li>En la ventana emergente de detalle, junto a cada trabajador con estado <b>Aprobado</b>, haga clic en el ícono de descarga 📥 <b>(Descargar Certificado)</b> para obtener el certificado PDF.</li>
+              </ol>
+            </div>
+
+            <div style="text-align: center; margin: 28px 0;">
+              <a href="${directPortalUrl}" style="background-color: #059669; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 12px; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);">
+                Ver Solicitudes Evaluadas y Descargar Certificados
+              </a>
+            </div>
+            
+            <p style="font-size: 11px; color: #94a3b8; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px; text-align: center;">
+              Mensaje automático generado por la plataforma Capacitaciones Molycop. Por favor no responda a este correo.
+            </p>
+          </div>
+        </div>
       `;
       await sendEmail(cEmail, subject, htmlContent);
     }
