@@ -144,9 +144,13 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
   const courses = useMemo(() => {
     const allCourses = (data?.categories || []).flatMap(c => c.courses || []);
     const userPlantIds = user.plantas?.map(p => String(p.niv_id)) || [];
-    // Only show courses that belong to one of the user's plants (comparing as Strings safely)
     return allCourses.filter(course => {
-      if (course.niv_id === null || course.niv_id === undefined) return false;
+      // Charlas generales o SIN-PLANTA son visibles para todos los contratistas
+      const isGeneral = course.niv_id === null || course.niv_id === undefined || course.niv_id === '' || course.plantaNombre === 'SIN-PLANTA';
+      if (isGeneral) return true;
+      // Si el contratista no tiene plantas asignadas, solo ve charlas generales / SIN-PLANTA
+      if (userPlantIds.length === 0) return false;
+      // Charlas específicas de planta se muestran si coinciden con alguna planta asignada
       return userPlantIds.includes(String(course.niv_id));
     });
   }, [data?.categories, user.plantas]);

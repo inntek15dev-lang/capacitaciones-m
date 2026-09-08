@@ -8,13 +8,16 @@ router.post('/', async (req, res) => {
     const { categoryId, name, maxPerSlot, niv_id, plantaNombre } = req.body;
 
     const newId = `c${Date.now()}`;
+    const cleanNivId = (niv_id && String(niv_id) !== 'SIN-PLANTA') ? parseInt(niv_id, 10) : null;
+    const cleanPlantaNombre = cleanNivId ? (plantaNombre || 'SIN-PLANTA') : 'SIN-PLANTA';
+
     const newCourse = await Course.create({
       id: newId,
       name,
       maxPerSlot: parseInt(maxPerSlot, 10) || 0,
       categoryId,
-      niv_id: niv_id ? parseInt(niv_id, 10) : null,
-      plantaNombre
+      niv_id: cleanNivId,
+      plantaNombre: cleanPlantaNombre
     });
 
     res.json({ success: true, course: newCourse });
@@ -32,12 +35,22 @@ router.put('/:id', async (req, res) => {
     const course = await Course.findByPk(id);
     if (!course) return res.status(404).json({ error: 'Course not found' });
 
+    let updatedNivId = course.niv_id;
+    let updatedPlantaNombre = course.plantaNombre;
+
+    if (niv_id !== undefined) {
+      updatedNivId = (niv_id && String(niv_id) !== 'SIN-PLANTA') ? parseInt(niv_id, 10) : null;
+    }
+    if (plantaNombre !== undefined || niv_id !== undefined) {
+      updatedPlantaNombre = updatedNivId ? (plantaNombre || course.plantaNombre || 'SIN-PLANTA') : 'SIN-PLANTA';
+    }
+
     await course.update({
       name: name !== undefined ? name : course.name,
       maxPerSlot: maxPerSlot !== undefined ? parseInt(maxPerSlot, 10) : course.maxPerSlot,
       categoryId: categoryId || course.categoryId,
-      niv_id: niv_id !== undefined ? (niv_id ? parseInt(niv_id, 10) : null) : course.niv_id,
-      plantaNombre: plantaNombre !== undefined ? plantaNombre : course.plantaNombre
+      niv_id: updatedNivId,
+      plantaNombre: updatedPlantaNombre
     });
 
     res.json({ success: true });

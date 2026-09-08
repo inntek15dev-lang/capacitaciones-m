@@ -37,6 +37,12 @@ services:
       - "127.0.0.1:4050:4050"
     depends_on:
       - prepro-db
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:' + (process.env.PORT || 4050) + '/', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - prepro-capacitaciones-m
 
@@ -50,6 +56,12 @@ services:
       - "127.0.0.1:8050:80"
     depends_on:
       - prepro-api
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:80/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     networks:
       - prepro-capacitaciones-m
 

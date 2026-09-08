@@ -95,7 +95,12 @@ jobs:
             # Login en el registro de GitHub
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # --- Respaldar Base de Datos ---
+            # --- DESPLIEGUE ZERO DOWNTIME ---
+            # 1. Pre-descargar nuevas imágenes mientras el sistema sigue atendiendo tráfico en caliente
+            echo "Descargando nuevas imágenes en segundo plano (Zero Downtime)..."
+            docker compose -f docker-compose-prepro.yml pull
+
+            # 2. Respaldar Base de Datos en caliente
             if [ -f .env ]; then
               export $(grep -v '^#' .env | xargs)
             fi
@@ -127,17 +132,13 @@ jobs:
               echo "Advertencia: Contenedor ${DB_CONTAINER} no está activo. Saltando respaldo."
             fi
             
-            # Detener contenedores
-            docker compose -f docker-compose-prepro.yml down || true
+            # 3. Intercambio atómico en milisegundos sin tirar el servicio (SIN docker compose down)
+            echo "Recreando contenedores de aplicación en caliente..."
+            docker compose -f docker-compose-prepro.yml up -d --no-deps --force-recreate prepro-api prepro-frontend
             
-            # Descargar nuevas imágenes y recrear contenedores desde cero
-            docker compose -f docker-compose-prepro.yml pull
-            docker compose -f docker-compose-prepro.yml up -d --force-recreate
-            
-            # --- Automatización de Base de Datos ---
-            # El esquema se sincroniza automáticamente mediante Sequelize (sequelize.sync({ alter: true })) al iniciar la app.
-            echo "Esperando 15 segundos a que la app inicie y sincronice la base de datos..."
-            sleep 15
+            # 4. Verificación de salud y sincronización de base de datos
+            echo "Verificando disponibilidad del servicio..."
+            sleep 10
             
             # Se deshabilita la ejecución automática del seeder en preproducción para proteger los datos
             # echo "Poblando base de datos con database/seed.js..."

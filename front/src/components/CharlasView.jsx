@@ -8,8 +8,26 @@ import config from '../config';
 const API_BASE = config.API_BASE;
 
 export default function CharlasView({ categories, user, onRefresh }) {
-  React.useMemo(() => {
-  }, [categories]);
+  const availablePlants = React.useMemo(() => {
+    const plantsMap = new Map();
+    if (user?.plantas && Array.isArray(user.plantas)) {
+      user.plantas.forEach(p => {
+        if (p.niv_id) {
+          plantsMap.set(String(p.niv_id), { niv_id: p.niv_id, nombre: p.nombre });
+        }
+      });
+    }
+    if (categories && Array.isArray(categories)) {
+      categories.forEach(cat => {
+        (cat.courses || []).forEach(course => {
+          if (course.niv_id && course.plantaNombre && course.plantaNombre !== 'SIN-PLANTA') {
+            plantsMap.set(String(course.niv_id), { niv_id: course.niv_id, nombre: course.plantaNombre });
+          }
+        });
+      });
+    }
+    return Array.from(plantsMap.values());
+  }, [user?.plantas, categories]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
@@ -19,8 +37,8 @@ export default function CharlasView({ categories, user, onRefresh }) {
     name: '',
     categoryId: '',
     maxPerSlot: 15,
-    niv_id: '',
-    plantaNombre: ''
+    niv_id: 'SIN-PLANTA',
+    plantaNombre: 'SIN-PLANTA'
   });
 
   // Category management state
@@ -64,8 +82,8 @@ export default function CharlasView({ categories, user, onRefresh }) {
       name: '',
       categoryId: categories[0]?.id || '',
       maxPerSlot: 15,
-      niv_id: user?.plantas?.[0]?.niv_id || '',
-      plantaNombre: user?.plantas?.[0]?.nombre || ''
+      niv_id: 'SIN-PLANTA',
+      plantaNombre: 'SIN-PLANTA'
     });
     setIsModalOpen(true);
   };
@@ -76,8 +94,8 @@ export default function CharlasView({ categories, user, onRefresh }) {
       name: course.name,
       categoryId,
       maxPerSlot: course.maxPerSlot,
-      niv_id: course.niv_id || '',
-      plantaNombre: course.plantaNombre || ''
+      niv_id: (course.niv_id && course.plantaNombre !== 'SIN-PLANTA') ? String(course.niv_id) : 'SIN-PLANTA',
+      plantaNombre: course.plantaNombre || 'SIN-PLANTA'
     });
     setIsModalOpen(true);
   };
@@ -93,10 +111,16 @@ export default function CharlasView({ categories, user, onRefresh }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const isSinPlanta = !formData.niv_id || formData.niv_id === 'SIN-PLANTA';
+      const payload = {
+        ...formData,
+        niv_id: isSinPlanta ? null : parseInt(formData.niv_id, 10),
+        plantaNombre: isSinPlanta ? 'SIN-PLANTA' : formData.plantaNombre
+      };
       if (editingCourse) {
-        await axios.put(`${API_BASE}/courses/${editingCourse.id}`, formData);
+        await axios.put(`${API_BASE}/courses/${editingCourse.id}`, payload);
       } else {
-        await axios.post(`${API_BASE}/courses`, formData);
+        await axios.post(`${API_BASE}/courses`, payload);
       }
       onRefresh();
       closeModal();
@@ -311,25 +335,32 @@ export default function CharlasView({ categories, user, onRefresh }) {
                 />
               </div>
 
-              {user?.plantas && user.plantas.length > 0 && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Planta Asignada</label>
-                  <select
-                    required
-                    value={formData.niv_id}
-                    onChange={e => {
-                      const selectedPlant = user.plantas.find(p => p.niv_id.toString() === e.target.value);
-                      setFormData({ ...formData, niv_id: e.target.value, plantaNombre: selectedPlant?.nombre || '' });
-                    }}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none"
-                  >
-                    <option value="" disabled>Seleccione una planta...</option>
-                    {user.plantas.map(p => (
-                      <option key={p.niv_id} value={p.niv_id}>{p.nombre}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Planta Asignada</label>
+                <select
+                  required
+                  value={formData.niv_id || 'SIN-PLANTA'}
+                  onChange={e => {
+                    const val = e.target.value;
+                    if (val === 'SIN-PLANTA') {
+                      setFormData({ ...formData, niv_id: 'SIN-PLANTA', plantaNombre: 'SIN-PLANTA' });
+                    } else {
+                      const selectedPlant = availablePlants.find(p => String(p.niv_id) === val);
+                      setFormData({
+                        ...formData,
+                        niv_id: val,
+                        plantaNombre: selectedPlant?.nombre || 'SIN-PLANTA'
+                      });
+                    }
+                  }}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none"
+                >
+                  <option value="SIN-PLANTA">SIN-PLANTA</option>
+                  {availablePlants.map(p => (
+                    <option key={p.niv_id} value={String(p.niv_id)}>{p.nombre}</option>
+                  ))}
+                </select>
+              </div>
 
               <div className="pt-4 flex gap-3">
                 <button
