@@ -8,7 +8,6 @@ export async function downloadCertificate(workerName, workerRut, contractorName,
     const form = pdfDoc.getForm();
     const fields = form.getFields();
 
-    console.log('[PDF] Found form fields in template:', fields.map(f => f.getName()));
 
     // Parse inductionDate (expected format: YYYY-MM-DD or DD/MM/YYYY)
     let day = '', month = '', year = '';
@@ -39,7 +38,6 @@ export async function downloadCertificate(workerName, workerRut, contractorName,
           }
         }
       } catch (e) {
-        console.error(`[PDF] Error filling field with search name "${searchName}":`, e);
       }
     };
 
@@ -69,7 +67,6 @@ export async function downloadCertificate(workerName, workerRut, contractorName,
       const pages = pdfDoc.getPages();
       const firstPage = pages[0];
       const { width, height } = firstPage.getSize();
-      console.log(`[PDF] Drawing text directly on A4/Letter page. Width: ${width}, Height: ${height}`);
 
       // Base font configuration (standard Helvetica)
       const fontSize = 10;
@@ -144,7 +141,6 @@ export async function downloadCertificate(workerName, workerRut, contractorName,
     link.click();
     document.body.removeChild(link);
   } catch (err) {
-    console.error('[PDF] Critical error generating PDF:', err);
     // Fallback: download template directly if pdf-lib fails completely
     const link = document.createElement('a');
     link.href = '/template-certificado.pdf';

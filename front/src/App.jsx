@@ -34,13 +34,11 @@ export default function App() {
     if (encodedData) {
       // Forzar cierre de cualquier sesión previa antes de iniciar la nueva
       if (localStorage.getItem('capacitaUser')) {
-        console.warn("[SSO] Se detectó ingreso externo. Forzando el cierre de la sesión previa.");
         localStorage.removeItem('capacitaUser');
       }
       try {
         // New Secure Decryption (AES-256-CBC + GZInflate)
         const userData = decryptDataString(encodedData);
-        console.log("[SSO] Decrypted User Data:", userData);
         
         if (userData) {
           // Mapeo robusto desde el JSON encriptado (ASEM/Molycop Standard)
@@ -60,14 +58,12 @@ export default function App() {
                 : null
           };
           
-          console.log("[SSO] Usuario mapeado correctamente:", mappedUser);
           
           // Almacenar en localStorage para persistencia durante la sesión
           localStorage.setItem('capacitaUser', JSON.stringify(mappedUser));
           return mappedUser;
         }
       } catch (err) {
-        console.error("Error decoding URL data:", err.message);
       }
     }
     
@@ -104,7 +100,6 @@ export default function App() {
 
   useEffect(() => {
     if (user) {
-      console.log("[App] Logged-in user session data:", user);
     }
   }, [user]);
 

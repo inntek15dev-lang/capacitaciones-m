@@ -27,7 +27,6 @@ function isWithinAllowedTime() {
     }
     return true;
   } catch (e) {
-    console.error('Error checking time restrictions:', e);
     const hour = new Date().getHours();
     if (hour < 7 || hour >= 16) {
       return false;
@@ -80,12 +79,10 @@ router.post('/', async (req, res) => {
       `;
       await sendEmail(emailTo, subject, htmlContent);
     } else {
-      console.warn(`No adminEmail found to send notification for slot ${slotId}`);
     }
 
     res.json(newRequest);
   } catch (err) {
-    console.error('API Request failed:', err);
     res.status(500).json({ error: 'Failed to create request' });
   }
 });
@@ -145,7 +142,6 @@ router.put('/:id', async (req, res) => {
             }
           });
         } catch (enrollErr) {
-          console.error("Error creating enrollment for worker:", wid, enrollErr);
           throw enrollErr;
         }
       }
@@ -164,12 +160,10 @@ router.put('/:id', async (req, res) => {
       `;
       await sendEmail(emailTo, subject, htmlContent);
     } else {
-      console.warn(`No contractorEmail found to send notification for request ${request.id}`);
     }
     
     res.json({ success: true, status });
   } catch (err) {
-    console.error('Failed to update request status:', err);
     res.status(500).json({ error: 'Failed to update request' });
   }
 });
@@ -184,7 +178,6 @@ router.delete('/:id', async (req, res) => {
     await request.destroy();
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Failed to delete request' });
   }
 });

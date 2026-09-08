@@ -12,22 +12,18 @@ const resolveDatabaseConflicts = async (sequelizeInstance) => {
         try {
             tableExists = await queryInterface.tableExists(tableName);
         } catch (err) {
-            console.warn(`Error al verificar si la tabla ${tableName} existe:`, err.message);
             continue;
         }
 
         if (!tableExists) {
-            console.log(`La tabla ${tableName} no existe en la BD. Se creará automáticamente durante sync.`);
             continue;
         }
 
-        console.log(`Verificando estructura y posibles conflictos de datos en la tabla: ${tableName}...`);
         
         let dbColumns;
         try {
             dbColumns = await queryInterface.describeTable(tableName);
         } catch (err) {
-            console.error(`Error al describir la tabla ${tableName}:`, err.message);
             continue;
         }
 
@@ -35,7 +31,6 @@ const resolveDatabaseConflicts = async (sequelizeInstance) => {
         try {
             rowCount = await model.count();
         } catch (err) {
-            console.warn(`No se pudo obtener el conteo de filas de ${tableName}:`, err.message);
             continue;
         }
 
@@ -59,7 +54,6 @@ const resolveDatabaseConflicts = async (sequelizeInstance) => {
                         defaultVal = [];
                     }
                     
-                    console.log(`[Estructura] Nueva columna NOT NULL detectada: ${tableName}.${columnName}. Inyectando valor por defecto temporal: ${defaultVal}`);
                     attributeDef.defaultValue = defaultVal;
                 }
             } else {
@@ -73,7 +67,6 @@ const resolveDatabaseConflicts = async (sequelizeInstance) => {
                             raw: true
                         });
                     } catch (err) {
-                        console.warn(`No se pudieron obtener los registros para validar conflictos en ${tableName}.${columnName}:`, err.message);
                         continue;
                     }
 
@@ -156,7 +149,6 @@ const resolveDatabaseConflicts = async (sequelizeInstance) => {
                         }
 
                         if (hasConflict) {
-                            console.warn(`[Conflicto Detectado - SIN MODIFICACIÓN] Tabla: ${tableName}, Columna: ${columnName}, PK: ${pkVal}. Valor incompatible "${val}". De acuerdo con las políticas de persistencia estricta, no se modificará el dato preexistente.`);
                         }
                     }
                 }
@@ -168,7 +160,6 @@ const resolveDatabaseConflicts = async (sequelizeInstance) => {
                     
                     const normalizeEnum = (str) => String(str).replace(/\s+/g, '').toUpperCase();
                     if (normalizeEnum(dbType) !== normalizeEnum(expectedEnumDefinition)) {
-                        console.log(`[Estructura] Detectada discrepancia de ENUM en ${tableName}.${columnName}. DB: ${dbType}, Modelo: ${expectedEnumDefinition}. Ejecutando ALTER TABLE...`);
                         
                         const allowNullSql = attributeDef.allowNull === false ? 'NOT NULL' : 'NULL';
                         const defaultSql = attributeDef.defaultValue !== undefined ? `DEFAULT '${attributeDef.defaultValue}'` : '';
@@ -176,9 +167,7 @@ const resolveDatabaseConflicts = async (sequelizeInstance) => {
                         
                         try {
                             await sequelizeInstance.query(alterQuery);
-                            console.log(`[Estructura] Columna ENUM ${tableName}.${columnName} modificada exitosamente.`);
                         } catch (alterErr) {
-                            console.error(`[Estructura] Error al ejecutar ALTER TABLE para modificar ENUM en ${tableName}.${columnName}:`, alterErr.message);
                         }
                     }
                 }

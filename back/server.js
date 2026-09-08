@@ -36,7 +36,6 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    console.warn(`[CORS] Origen bloqueado: ${origin}`);
     callback(new Error(`CORS bloqueado para origen: ${origin}`));
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -76,9 +75,7 @@ async function initDb() {
     await resolveDatabaseConflicts(sequelize);
     
     await sequelize.sync({ alter: true });
-    console.log('Database connected and models synced with evaluations.');
   } catch (err) {
-    console.error('Failed to sync database:', err);
   }
 }
 
@@ -88,6 +85,5 @@ initDb();
 app.use('/api/v1', router);
 
 app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
 });
 

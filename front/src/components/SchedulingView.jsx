@@ -96,7 +96,6 @@ function SlotModal({ date, maxCap, onAdd, onClose, slot }) {
 
 export default function SchedulingView({ course, schedules, onAddSlot, onDeleteSlot }) {
   React.useMemo(() => {
-    console.log("[SchedulingView] Reading schedules data:", schedules);
   }, [schedules]);
 
   const [year, setYear] = useState(2026);

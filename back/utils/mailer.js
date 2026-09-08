@@ -24,10 +24,8 @@ const sendEmail = async (to, subject, htmlContent) => {
       html: htmlContent,
     });
 
-    console.log(`[MAILER] Correo enviado exitosamente a ${to}. Message ID: ${info.messageId}`);
     return true;
   } catch (error) {
-    console.error(`[MAILER] Error al enviar correo a ${to}:`, error);
     return false;
   }
 };

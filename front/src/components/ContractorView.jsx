@@ -20,7 +20,6 @@ function isWithinAllowedTime() {
     }
     return true;
   } catch (e) {
-    console.error('Error checking time restrictions:', e);
     const hour = new Date().getHours();
     if (hour < 7 || hour >= 16) {
       return false;
@@ -85,7 +84,6 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
         // Iteramos por cada planta del contratista y llamamos a la API interna
         for (const planta of user.plantas) {
           if (!planta.niv_id) {
-            console.warn("[CONTRACTOR] Saltando planta sin niv_id:", planta);
             continue;
           }
           const res = await axios.get(`${API_BASE}/external/workers`, {
@@ -101,7 +99,6 @@ export default function ContractorView({ user, data, onLogout, onRefresh }) {
         }
         setPlantWorkers(allFetchedWorkers);
       } catch (err) {
-        console.error("Error fetching workers from plants:", err);
       } finally {
         setFetchingWorkers(false);
       }

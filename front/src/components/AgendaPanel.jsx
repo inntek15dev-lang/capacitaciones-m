@@ -127,7 +127,6 @@ export default function AgendaPanel({ slots, selectedSlot, onSelectSlot }) {
   const [view, setView] = useState('list'); // 'list' | 'month'
   
   React.useMemo(() => {
-    console.log("[AgendaPanel] Reading slots (agenda) data:", slots);
   }, [slots]);
 
   return (

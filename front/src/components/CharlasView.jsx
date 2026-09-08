@@ -9,7 +9,6 @@ const API_BASE = config.API_BASE;
 
 export default function CharlasView({ categories, user, onRefresh }) {
   React.useMemo(() => {
-    console.log("[CharlasView] Reading categories (talks) data:", categories);
   }, [categories]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);

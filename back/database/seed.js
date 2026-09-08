@@ -18,7 +18,6 @@ const { resolveDatabaseConflicts } = require('./dbUtils');
 
 const seed = async () => {
     try {
-        console.log('=== SEEDER: Inicio ===');
 
         // ---------------------------------------------------------------
         // 1. Asegurar existencia de la base de datos (CREATE IF NOT EXISTS)
@@ -37,40 +36,32 @@ const seed = async () => {
         });
         await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
         await connection.end();
-        console.log(`[DB] Base de datos "${dbName}" asegurada.`);
 
         // ---------------------------------------------------------------
         // 2. Resolver conflictos de estructura / datos antes de ALTER
         // ---------------------------------------------------------------
         await resolveDatabaseConflicts(sequelize);
-        console.log('[DB] Conflictos de estructura resueltos.');
 
         // ---------------------------------------------------------------
         // 3. Sincronizar esquema de forma segura (ALTER, nunca DROP)
         // ---------------------------------------------------------------
         await sequelize.sync({ alter: true });
-        console.log('[DB] Esquema sincronizado con alter: true.');
 
         // ---------------------------------------------------------------
         // 4. Sembrar SOLO usuarios base del sistema (findOrCreate)
         // ---------------------------------------------------------------
-        console.log('[SEED] Creando usuarios base del sistema...');
         for (const user of initialData.users) {
             const [, created] = await User.findOrCreate({
                 where: { id: user.id },
                 defaults: user
             });
             if (created) {
-                console.log(`  ✅ Usuario creado: ${user.username} (${user.role})`);
             } else {
-                console.log(`  ⏭️  Usuario ya existe: ${user.username}`);
             }
         }
 
-        console.log('=== SEEDER: Finalizado exitosamente ===');
 
     } catch (error) {
-        console.error('❌ Error durante el proceso de seeding:', error);
         process.exit(1);
     }
 };

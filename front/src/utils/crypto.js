@@ -11,7 +11,6 @@ import pako from 'pako';
 export const decryptDataString = (cadenatexto) => {
     try {
         if (!cadenatexto) return null;
-        console.log("[CRYPTO] Intentando desencriptar payload...");
         
         const keyString = 'MolycopSecureTrainingKey2024###';
         
@@ -55,10 +54,8 @@ export const decryptDataString = (cadenatexto) => {
         
         // 8. Parse JSON
         const result = JSON.parse(decompressed);
-        console.log("[CRYPTO] Desencriptación exitosa:", result);
         return result;
     } catch (err) {
-        console.error("[CRYPTO] Error crítico en desencriptación:", err.message);
         return null;
     }
 };

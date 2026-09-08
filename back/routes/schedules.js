@@ -28,7 +28,6 @@ router.post('/schedules', async (req, res) => {
 
     res.json({ success: true, slot: savedSlot });
   } catch (err) {
-    console.error('Error saving slot:', err);
     res.status(500).json({ error: 'Failed to save slot' });
   }
 });
@@ -91,7 +90,6 @@ router.post('/enroll', async (req, res) => {
 
     res.json({ success: true, enrolledCount: updatedSlot.enrollments.length });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Failed to enroll workers' });
   }
 });
@@ -138,7 +136,6 @@ router.post('/enrollments/evaluation', async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Failed to save evaluations' });
   }
 });
